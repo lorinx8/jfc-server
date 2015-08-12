@@ -1,0 +1,28 @@
+package nfnet
+
+import (
+	"testing"
+
+	"jfcsrv/nfconst"
+)
+
+func TestDataPackage1(t *testing.T) {
+	src := []byte{
+		0xF5, 0xA6, 0x0C, 0x00, 0x1B, 0x73, 0x7A, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30,
+		0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0xBE, 0xEF}
+
+	pack, err := NewNFRequestPackage(src)
+
+	if err != nil {
+		t.Error("DataPackageTest1 Error", err)
+	} else {
+
+		n_payload := len(src) - nfconst.LEN_PACKAGE_EXTRA_DATE
+
+		if pack.Header1 != 0xF5 || pack.Header2 != 0xA6 || pack.Cmd != nfconst.CMD_REQUEST_ONE_ANGLE_RESULT || int(pack.Length) != n_payload || pack.Ender1 != 0xBE || pack.Ender2 != 0xEF {
+			t.Log(pack)
+			t.Error("DataPackageTest1 Error, data incorrect")
+		}
+	}
+
+}
