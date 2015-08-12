@@ -3,6 +3,7 @@ package nfconst
 const (
 	// sock command and socket related
 	CMD_REQUEST_PARAM            byte = 10
+	CMD_REQUEST_PARAM_RESPONSE   byte = 11
 	CMD_PARAM_TYPE_ANGLE         byte = 1
 	CMD_REQUEST_ONE_ANGLE_RESULT byte = 12
 

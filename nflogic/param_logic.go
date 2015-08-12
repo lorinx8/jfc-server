@@ -33,7 +33,7 @@ type baseAngle struct {
 type ParamLogic struct {
 }
 
-func (logic *ParamLogic) OnLogicMessage(msg []byte) (ret []byte, err error) {
+func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err error) {
 
 	var t paramRequestPackage
 	reader := bytes.NewReader(msg)
@@ -45,9 +45,11 @@ func (logic *ParamLogic) OnLogicMessage(msg []byte) (ret []byte, err error) {
 
 	switch t.ParamType {
 	case nfconst.CMD_PARAM_TYPE_ANGLE:
-		handleAngleParamQuest(s)
+		ret, err = handleAngleParamQuest(s)
 	}
-	return nil, nil
+
+	cmd = nfconst.CMD_REQUEST_PARAM_RESPONSE
+	return
 }
 
 func handleAngleParamQuest(serial string) (ret []byte, err error) {
@@ -74,7 +76,7 @@ func handleAngleParamQuest(serial string) (ret []byte, err error) {
 
 		if ok {
 			_bangle.necks = append(_bangle.necks, _nangle)
-			fmt.Println(_bangle)
+			// fmt.Println(_bangle)
 		} else {
 			var __bangle *baseAngle = &baseAngle{
 				bid:   byte(v.Bid),

@@ -1,6 +1,7 @@
 package nfnet
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"jfcsrv/nfconst"
@@ -55,5 +56,14 @@ func NewNFRequestPackage(data []byte) (pk NFPackage, err error) {
 }
 
 func NewNFResponseBytes(cmd byte, payload []byte) (ret []byte, err error) {
-
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, nfconst.SOCK_PACK_HEADER_L)
+	binary.Write(buf, binary.BigEndian, nfconst.SOCK_PACK_HEADER_H)
+	binary.Write(buf, binary.BigEndian, cmd)
+	binary.Write(buf, binary.BigEndian, uint16(len(payload)))
+	binary.Write(buf, binary.BigEndian, payload)
+	binary.Write(buf, binary.BigEndian, byte(0))
+	binary.Write(buf, binary.BigEndian, nfconst.SOCK_PACK_ENDER_L)
+	binary.Write(buf, binary.BigEndian, nfconst.SOCK_PACK_ENDER_H)
+	return buf.Bytes(), nil
 }
