@@ -45,14 +45,14 @@ func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err e
 
 	switch t.ParamType {
 	case nfconst.CMD_PARAM_TYPE_ANGLE:
-		ret, err = handleAngleParamQuest(s)
+		ret, err = handleAngleParamQuest(s, nfconst.CMD_PARAM_TYPE_ANGLE)
 	}
 
 	cmd = nfconst.CMD_REQUEST_PARAM_RESPONSE
 	return
 }
 
-func handleAngleParamQuest(serial string) (ret []byte, err error) {
+func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
 
 	retDb, err := nfdb.QueryAngleParamByDeviceSerial(serial)
 	if err != nil {
@@ -90,6 +90,9 @@ func handleAngleParamQuest(serial string) (ret []byte, err error) {
 
 	// convert map to bytes
 	buf := new(bytes.Buffer)
+
+	binary.Write(buf, binary.BigEndian, []byte(serial))
+	binary.Write(buf, binary.BigEndian, ptype)
 
 	// base angle count, uint8
 

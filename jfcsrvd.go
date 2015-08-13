@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
-	"jfcsrv/nflogic"
-	"jfcsrv/nfutil"
+
 	"net"
 	"runtime"
+
+	"jfcsrv/nflogic"
+	"jfcsrv/nfnet"
+	"jfcsrv/nfutil"
 )
 
 func main() {
@@ -30,8 +33,9 @@ func handle_tcp_accept(tcpListener *net.TCPListener) {
 		} else {
 			fmt.Println("one tcp connected!")
 			connChan := make(chan []byte)
-			go write_tcp_conn(tcpConn, connChan)
 			go read_tcp_conn(tcpConn, connChan)
+			go write_tcp_conn(tcpConn, connChan)
+
 		}
 	}
 }
@@ -39,17 +43,24 @@ func handle_tcp_accept(tcpListener *net.TCPListener) {
 func read_tcp_conn(tcpConn *net.TCPConn, connChan chan []byte) {
 	buffer := make([]byte, 2048)
 	tcpConn.SetReadBuffer(2048)
+	var handle *nfnet.OrgStreamHandler = nfnet.NewOrgStreamHandler()
 	for {
 		n, err := tcpConn.Read(buffer[0:])
 		if err != nil {
-			fmt.Println("one tcp connection read function failed!")
-			fmt.Println("one tcp connection close now!")
+			fmt.Println(err.Error())
 			tcpConn.Close()
 			runtime.Goexit()
 		} else {
-			fmt.Print("Recieve: ")
-			nfutil.PrintHexArray(buffer[0:n])
-			connChan <- buffer[0:n]
+			fmt.Printf("Recieve: %d bytes", n)
+			done, buf, err1 := handle.AddStream(buffer[0:n])
+			if err1 != nil {
+				fmt.Println("read tcp add stream error", err1)
+			} else {
+				if done {
+					connChan <- buf[0:len(buf)]
+				}
+			}
+
 		}
 	}
 }

@@ -26,7 +26,7 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 	case nfconst.CMD_REQUEST_PARAM:
 		handler = &ParamLogic{}
 	case nfconst.CMD_REQUEST_ONE_ANGLE_RESULT:
-		fmt.Println("handle the one angle result msg")
+		handler = &AngleResultLogic{}
 	default:
 		err = errors.New("no command handler")
 		return nil, err

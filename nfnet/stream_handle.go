@@ -77,10 +77,11 @@ func (h *OrgStreamHandler) AddStream(src []byte) (done bool, buf []byte, err err
 
 	if h.n_data_remain == 0 {
 		fmt.Println("n_data_remain = 0, data copyed", h.n_data_copyed)
+		_n_pack_data := h.n_pack_data
 		h.n_pack_data = 0
 		h.n_data_copyed = 0
 		h.n_data_remain = 0
-		return true, h.buffer[0:h.n_pack_data], nil
+		return true, h.buffer[0:_n_pack_data], nil
 	} else {
 		return false, h.buffer[0:h.n_data_copyed], nil
 	}
