@@ -1,22 +1,24 @@
-package nfdb
+package paramlogic
+
+import "jfcsrv/nfdb"
 
 type angleParamDb struct {
-	Id           int
-	DeviceSerial string
-	RefMapBlockId   string
-	Bid          int
-	Bangle       int
-	Nid          int
-	Nangle       int
-	CropX        int
-	CropY        int
-	CropW        int
-	CropH        int
-	Remark       string
+	Id            int
+	DeviceSerial  string
+	RefMapBlockId string
+	Bid           int
+	Bangle        int
+	Nid           int
+	Nangle        int
+	CropX         int
+	CropY         int
+	CropW         int
+	CropH         int
+	Remark        string
 }
 
-func QueryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err error) {
-	db, err1 := getConn()
+func queryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err error) {
+	db, err1 := nfdb.GetConn()
 	if err != nil {
 		return nil, err1
 	}

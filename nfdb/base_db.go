@@ -12,7 +12,7 @@ var (
 	_db *sql.DB
 )
 
-func getConn() (db *sql.DB, err error) {
+func GetConn() (db *sql.DB, err error) {
 	if _db != nil {
 		fmt.Println("_db not nil, return exists")
 		return _db, nil

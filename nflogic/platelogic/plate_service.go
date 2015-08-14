@@ -1,4 +1,4 @@
-package nflogic
+package platelogic
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 )
 
 // 结果上报,数据负载结构体
-type angleResultRequestPackage struct {
+type plateResultRequestPackage struct {
 	Serial      [nfconst.LEN_DEVICE_SERIAL]byte
 	Bid         byte
 	Nid         byte
@@ -20,14 +20,23 @@ type angleResultRequestPackage struct {
 	PlateNumber [nfconst.LEN_MAX_PLATE_NUMBER]byte
 }
 
-type AngleResultLogic struct {
+type PlateResultLogic struct {
 }
 
-func (logic *AngleResultLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err error) {
+func (logic *PlateResultLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err error) {
 	_cmd := nfconst.CMD_REQUEST_ONE_ANGLE_RESULT_RESPONSE
+	msgChan := make(chan []byte)
+	go handlePlateReport(msgChan)
+	msgChan <- msg[:]
 
+	return _cmd, nil, nil
+}
+
+// 处理车牌结果
+func handlePlateReport(msgChan chan []byte) {
 	// 解析角度结果数据包
-	var t angleResultRequestPackage
+	msg := <-msgChan
+	var t plateResultRequestPackage
 	n := binary.Size(t)
 	buffer := bytes.NewBuffer(msg[0:n])
 	binary.Read(buffer, binary.BigEndian, &t)
@@ -42,26 +51,60 @@ func (logic *AngleResultLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte,
 	// 业务处理
 	fmt.Printf("Device Serial:%s, report angle result: bid=%d, nid=%d, count=%d, img_n=%d\n", t.Serial, t.Bid, t.Nid, t.Count, n_img)
 
-	// 如果有车牌，保存图片
+	// 处理上报数据无车牌的情况
+	if t.Count == 0 {
+		handlePlateInPool(serial, t.Bid, t.Nid, "")
+		return
+	}
+
+	// 如果上报的车牌数量不为1
 	if t.Count != 0 {
 		orgNumber := string(t.PlateNumber[:])
 		pcode, pchar, cchar, pnumber, _err := parsePlateNumber(orgNumber)
 		if _err == nil {
+			// 能够得到像样的车牌号码，进行下一步处理
 			fmt.Println(pcode, pchar, cchar, pnumber)
-		} else {
-			fmt.Println(_err)
-		}
-		// 保存图片
-		savePlateImage(serial, t.Bid, t.Nid, img_data)
-	}
+			handlePlateInPool(serial, t.Bid, t.Nid, pnumber)
+			// 保存图片
+			savePlateImage(serial, t.Bid, t.Nid, img_data)
 
-	// 处理车牌结果
-	return _cmd, nil, nil
+		} else {
+			// 这次上报的数据不要了
+			fmt.Println(_err)
+			return
+		}
+	}
 }
 
-// 处理车牌识别结果
-func handlePlateNumber(serial string, bid int, nid int) {
+// 处理车牌识别结果, 判断是否用本次的上报数据
+func handlePlateInPool(serial string, bid byte, nid byte, platenumber string) {
+}
 
+// 比较新旧车牌号码的相似度
+func calSimilarity(plate_new string, plate_old string) (ret int) {
+	if plate_old == "" && plate_new != "" {
+		return 0
+	}
+	if plate_new == "" && plate_old != "" {
+		return 0
+	}
+
+	oldByte := []byte(plate_old)
+	newByte := []byte(plate_new)
+
+	var max int
+	if len(oldByte) > len(newByte) {
+		max = len(oldByte)
+	} else {
+		max = len(newByte)
+	}
+	step := 20
+	for i := 0; i < max; i++ {
+		if oldByte[i] == newByte[i] {
+			ret = ret + step
+		}
+	}
+	return
 }
 
 // 从原始的车牌号码中解析数据

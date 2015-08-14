@@ -1,4 +1,4 @@
-package nflogic
+package paramlogic
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"jfcsrv/nfconst"
-	"jfcsrv/nfdb"
 )
 
 // 参数请求消息,数据包负载结构体
@@ -54,7 +53,7 @@ func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err e
 
 func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
 
-	retDb, err := nfdb.QueryAngleParamByDeviceSerial(serial)
+	retDb, err := queryAngleParamByDeviceSerial(serial)
 	if err != nil {
 		return nil, err
 	}

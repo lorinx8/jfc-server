@@ -1,4 +1,4 @@
-package nfdb
+package paramlogic
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 func TestParamDb(t *testing.T) {
 
-	params, err := QueryAngleParamByDeviceSerial("sz1234567890")
+	params, err := queryAngleParamByDeviceSerial("sz1234567890")
 	if err != nil {
 		fmt.Println(err)
 	} else {

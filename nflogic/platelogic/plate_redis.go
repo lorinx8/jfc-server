@@ -1,8 +1,10 @@
-package nfredis
+package platelogic
 
 import (
 	"fmt"
 	"reflect"
+
+	"jfcsrv/nfredis"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -40,7 +42,7 @@ func generateKey(serial string, bid int, nid int) (key string) {
 }
 
 // 新增或更新
-func AddOrUpdate(serial string, bid int, nid int, data *PlateTemp) (ret string, err error) {
+func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateTemp) (ret string, err error) {
 	key := generateKey(serial, bid, nid)
 	s := reflect.ValueOf(data).Elem()
 	typeOfT := s.Type()
@@ -51,35 +53,21 @@ func AddOrUpdate(serial string, bid int, nid int, data *PlateTemp) (ret string, 
 		// fmt.Printf("%d: %s %s = %v\n", i, typeOfT.Field(i).Name, f.Type(), f.Interface())
 		args = append(args, typeOfT.Field(i).Name, f.Interface())
 	}
-	ret, err = hmset(args...)
+	ret, err = nfredis.Hmset(args...)
 	return
 }
 
-func GetPlateTemp(serial string, bid int, nid int) (ret *PlateTemp, err error) {
+func getPlateTemp(serial string, bid int, nid int) (ret *PlateTemp, err error) {
 	key := generateKey(serial, bid, nid)
-	ret = &PlateTemp{}
-	s := reflect.ValueOf(ret).Elem()
-	typeOfT := s.Type()
-	for i := 0; i < s.NumField(); i++ {
-		fieldname := typeOfT.Field(i).Name
-		v, err1 := hget(key, fieldname)
-		if err1 != nil {
-			err = err1
-			break
-		}
-		s.FieldByName(fieldname).SetString(v)
-	}
-	return
-}
 
-func GetPlateTemp2(serial string, bid int, nid int) (ret *PlateTemp, err error) {
-	key := generateKey(serial, bid, nid)
-	ret = &PlateTemp{}
-
-	values, err1 := hgetall(key)
+	values, err1 := nfredis.Hgetall(key)
 	if err1 != nil {
 		return nil, err1
 	}
+	if len(values) == 0 {
+		return nil, nil
+	}
+	ret = &PlateTemp{}
 	if err2 := redis.ScanStruct(values, ret); err2 != nil {
 		return nil, err2
 	}

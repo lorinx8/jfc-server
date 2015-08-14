@@ -1,10 +1,12 @@
-package nfredis
+package platelogic
 
 import "testing"
 
 import "jfcsrv/nfutil"
+import "jfcsrv/nfconst"
 
 func TestPlateRedisAddOrUpdate(t *testing.T) {
+	nfconst.InitialConst()
 	plate := PlateTemp{
 		Last_plate:           "BL879",
 		Last_plate_img:       "/pic/test.jpg",
@@ -16,11 +18,16 @@ func TestPlateRedisAddOrUpdate(t *testing.T) {
 		Like_count:           "1",
 		Updatetime:           nfutil.GetNowString(),
 	}
-	ss, err := AddOrUpdate("sz1234567890", 1, 1, &plate)
+	ss, err := addOrUpdatePlateTemp("sz1234567890", 1, 1, &plate)
 	t.Log(ss, err)
 }
 
 func TestPlateRedisGetPlateTemp(t *testing.T) {
-	s, err := GetPlateTemp2("sz12345678rr", 1, 1)
-	t.Log(s, err)
+	nfconst.InitialConst()
+	s, err := getPlateTemp("sz1234567891", 1, 1)
+	if s == nil {
+		t.Log("ss nil")
+	} else {
+		t.Log(s, err)
+	}
 }

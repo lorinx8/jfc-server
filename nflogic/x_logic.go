@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"jfcsrv/nfconst"
+	"jfcsrv/nflogic/paramlogic"
+	"jfcsrv/nflogic/platelogic"
 	"jfcsrv/nfnet"
 )
 
@@ -24,9 +26,9 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 	var handler LogicHandler
 	switch pkg.Cmd {
 	case nfconst.CMD_REQUEST_PARAM:
-		handler = &ParamLogic{}
+		handler = &paramlogic.ParamLogic{}
 	case nfconst.CMD_REQUEST_ONE_ANGLE_RESULT:
-		handler = &AngleResultLogic{}
+		handler = &platelogic.PlateResultLogic{}
 	default:
 		err = errors.New("no command handler")
 		return nil, err

@@ -36,7 +36,7 @@ func getConn() (c redis.Conn) {
 	return pool.Get()
 }
 
-func exists(key interface{}) (ret int, err error) {
+func Exists(key interface{}) (ret int, err error) {
 	c := getConn()
 	reply, err1 := c.Do("EXISTS", key)
 	defer c.Close()
@@ -44,7 +44,7 @@ func exists(key interface{}) (ret int, err error) {
 	return ii, err2
 }
 
-func hset(key interface{}, field interface{}, value interface{}) (ret int, err error) {
+func Hset(key interface{}, field interface{}, value interface{}) (ret int, err error) {
 	c := getConn()
 	reply, err1 := c.Do("HSET", key, field, value)
 	defer c.Close()
@@ -52,7 +52,7 @@ func hset(key interface{}, field interface{}, value interface{}) (ret int, err e
 	return ii, err2
 }
 
-func hget(key interface{}, field interface{}) (ret string, err error) {
+func Hget(key interface{}, field interface{}) (ret string, err error) {
 	c := getConn()
 	reply, err1 := c.Do("HGET", key, field)
 	defer c.Close()
@@ -60,7 +60,7 @@ func hget(key interface{}, field interface{}) (ret string, err error) {
 	return ss, err2
 }
 
-func hmset(args ...interface{}) (ret string, err error) {
+func Hmset(args ...interface{}) (ret string, err error) {
 	c := getConn()
 	reply, err1 := c.Do("HMSET", args...)
 	defer c.Close()
@@ -68,7 +68,7 @@ func hmset(args ...interface{}) (ret string, err error) {
 	return ss, err2
 }
 
-func hgetall(key interface{}) (ret []interface{}, err error) {
+func Hgetall(key interface{}) (ret []interface{}, err error) {
 	c := getConn()
 	reply, err1 := c.Do("HGETALL", key)
 	values, err2 := redis.Values(reply, err1)
