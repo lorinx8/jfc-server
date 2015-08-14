@@ -32,6 +32,12 @@ func GetNow() (y int, mon int, d int, h int, min int, s int) {
 	return t.Year(), int(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Second()
 }
 
+func GetNowString() (str string) {
+	t := time.Now()
+	str = fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", t.Year(), int(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Second())
+	return
+}
+
 // 创建文件路径,如果不存在
 func CreateFolderIfNotExist(path string) error {
 	err := os.MkdirAll(path, 0777)

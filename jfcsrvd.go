@@ -2,22 +2,23 @@ package main
 
 import (
 	"fmt"
-
-	"net"
-	"runtime"
-
+	"jfcsrv/nfconst"
 	"jfcsrv/nflogic"
 	"jfcsrv/nfnet"
 	"jfcsrv/nfutil"
+	"net"
+	"runtime"
 )
 
 func main() {
-
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9630")
+	fmt.Println("JFC Server For Papakaka...")
+	fmt.Println("Config loading...")
+	nfconst.InitialConst()
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+nfconst.JCfg.JFCPort)
 	check_error(err)
 	tcpListener, err := net.ListenTCP("tcp", tcpAddr)
 	check_error(err)
-	fmt.Println("JFC Server Start...")
+	fmt.Println("JFC Server listening on port", nfconst.JCfg.JFCPort)
 	for i := 0; i < 100; i++ {
 		go handle_tcp_accept(tcpListener)
 	}
@@ -60,7 +61,6 @@ func read_tcp_conn(tcpConn *net.TCPConn, connChan chan []byte) {
 					connChan <- buf[0:len(buf)]
 				}
 			}
-
 		}
 	}
 }

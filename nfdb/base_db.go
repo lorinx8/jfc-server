@@ -12,13 +12,13 @@ var (
 	_db *sql.DB
 )
 
-func getDb() (db *sql.DB, err error) {
+func getConn() (db *sql.DB, err error) {
 	if _db != nil {
 		fmt.Println("_db not nil, return exists")
 		return _db, nil
 	} else {
 		fmt.Println("_db nil, open it")
-		__db, err1 := sql.Open("postgres", "user=pguser1 password=pguser1 host=dev1.papakaka.com port=5431 dbname=paka sslmode=disable")
+		__db, err1 := sql.Open("postgres", "user=pguser1 password=pguser1 host=dev1.papakaka.com port=5431 dbname=j2map sslmode=disable")
 		if err1 != nil {
 			log.Fatal(err1)
 		} else {

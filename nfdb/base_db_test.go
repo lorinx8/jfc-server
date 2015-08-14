@@ -12,22 +12,16 @@ func T_estBaseDb(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 
-		db, err := getDb()
+		db, err := getConn()
 		if err == nil {
 			fmt.Println(db)
 		} else {
 			fmt.Println(err)
 		}
 
-		rows, err1 := db.Query("select * from tbl_jfcp_angle_param")
+		_, err1 := db.Query("select 1")
 		if err1 != nil {
 			fmt.Println(err1)
-		} else {
-			for rows.Next() {
-				var ss angleParam
-				err = rows.Scan(&ss.id, &ss.deviceSerial, &ss.parkNumber, &ss.mapBlockId, &ss.bid, &ss.bangle, &ss.nid, &ss.nangle, &ss.cropX, &ss.cropY, &ss.cropW, &ss.cropH, &ss.remark)
-				fmt.Println(ss)
-			}
 		}
 		time.Sleep(3000 * time.Millisecond)
 	}

@@ -13,5 +13,4 @@ func TestParamDb(t *testing.T) {
 	} else {
 		fmt.Println(params)
 	}
-
 }

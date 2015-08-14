@@ -23,10 +23,11 @@ func NewNFRequestPackage(data []byte) (pk NFPackage, err error) {
 	// heaer
 	pk.Header1 = data[0]
 	pk.Header2 = data[1]
-	if pk.Header1 != nfconst.SOCK_PACK_HEADER_L || pk.Header2 != nfconst.SOCK_PACK_HEADER_H {
+	if data[0] != nfconst.SOCK_PACK_HEADER_L || data[1] != nfconst.SOCK_PACK_HEADER_H {
 		err = errors.New("nf package data header invalid")
 		return pk, err
 	}
+	
 
 	dl := len(data)
 	// ender

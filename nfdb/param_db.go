@@ -3,8 +3,7 @@ package nfdb
 type angleParamDb struct {
 	Id           int
 	DeviceSerial string
-	ParkNumber   string
-	MapBlockId   string
+	RefMapBlockId   string
 	Bid          int
 	Bangle       int
 	Nid          int
@@ -17,7 +16,7 @@ type angleParamDb struct {
 }
 
 func QueryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err error) {
-	db, err1 := getDb()
+	db, err1 := getConn()
 	if err != nil {
 		return nil, err1
 	}
@@ -30,7 +29,7 @@ func QueryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err er
 	params = make([]angleParamDb, 0, 10)
 	for rows.Next() {
 		var ss angleParamDb
-		err = rows.Scan(&ss.Id, &ss.DeviceSerial, &ss.ParkNumber, &ss.MapBlockId, &ss.Bid, &ss.Bangle, &ss.Nid, &ss.Nangle, &ss.CropX, &ss.CropY, &ss.CropW, &ss.CropH, &ss.Remark)
+		err = rows.Scan(&ss.Id, &ss.DeviceSerial, &ss.RefMapBlockId, &ss.Bid, &ss.Bangle, &ss.Nid, &ss.Nangle, &ss.CropX, &ss.CropY, &ss.CropW, &ss.CropH, &ss.Remark)
 		params = append(params, ss)
 	}
 	return params, nil
