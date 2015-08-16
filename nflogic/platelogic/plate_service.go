@@ -20,6 +20,14 @@ type plateResultRequestPackage struct {
 	PlateNumber [nfconst.LEN_MAX_PLATE_NUMBER]byte
 }
 
+type plateNumberInfo struct {
+	ProvinceCode int
+	ProvinceChar string
+	CityCode     string
+	PlateNo      string
+	ImageByte    []byte
+}
+
 type PlateResultLogic struct {
 }
 
@@ -43,9 +51,8 @@ func handlePlateReport(msgChan chan []byte) {
 
 	// 设备编号
 	serial := string(t.Serial[0:len(t.Serial)])
-
 	// 图片数据
-	n_img := len(msg) - n
+	n_img := len(msg) - n // 图片的长度
 	img_data := msg[n:]
 
 	// 业务处理
@@ -53,31 +60,43 @@ func handlePlateReport(msgChan chan []byte) {
 
 	// 处理上报数据无车牌的情况
 	if t.Count == 0 {
-		handlePlateInPool(serial, t.Bid, t.Nid, "")
+		handlePlateInPool(serial, int(t.Bid), int(t.Nid), nil)
 		return
 	}
 
-	// 如果上报的车牌数量不为1
-	if t.Count != 0 {
-		orgNumber := string(t.PlateNumber[:])
-		pcode, pchar, cchar, pnumber, _err := parsePlateNumber(orgNumber)
-		if _err == nil {
-			// 能够得到像样的车牌号码，进行下一步处理
-			fmt.Println(pcode, pchar, cchar, pnumber)
-			handlePlateInPool(serial, t.Bid, t.Nid, pnumber)
-			// 保存图片
-			savePlateImage(serial, t.Bid, t.Nid, img_data)
-
-		} else {
-			// 这次上报的数据不要了
-			fmt.Println(_err)
-			return
-		}
+	// 上报的车牌不等于
+	orgString := string(t.PlateNumber[:])
+	pinfo, _err := parseOrgPlateString(orgString)
+	if _err != nil {
+		// 车牌都解析不成功，不接续了
+		return
 	}
+	pinfo.ImageByte = img_data // 好了，现在车牌信息全了
+	handlePlateInPool(serial, int(t.Bid), int(t.Nid), &pinfo)
+	// 。。。
 }
 
 // 处理车牌识别结果, 判断是否用本次的上报数据
-func handlePlateInPool(serial string, bid byte, nid byte, platenumber string) {
+func handlePlateInPool(serial string, bid int, nid int, pinfo *plateNumberInfo) error {
+	// 从缓存中取得已有的车牌缓存结果
+	plateTemp, err := getPlateTemp(serial, bid, nid)
+	if err != nil {
+		return err // 不再处理这个了
+	}
+
+	// 说明这个设备的这个位置，还没有数据
+	if plateTemp == nil {
+		// 处理第一个数据， 直接接受这个车牌
+
+	}
+
+	return nil
+}
+
+// 采用这个车牌，需要做这么几件事情
+// 更新缓存数据，写入数据库，向云存储中上传数据
+func acceptPlateNumber(serial string, bid byte, nid byte, pinfo *plateNumberInfo) {
+
 }
 
 // 比较新旧车牌号码的相似度
@@ -114,20 +133,20 @@ func calSimilarity(plate_new string, plate_old string) (ret int) {
 // pchar 城市字面值，粤
 // cchar 城市编号AB
 // pnumber 五位号码
-func parsePlateNumber(orgNumber string) (pcode int, pchar string, cchar string, pnumber string, err error) {
-	ss := strings.Split(orgNumber, "_")
+func parseOrgPlateString(orgString string) (pinfo plateNumberInfo, err error) {
+	ss := strings.Split(orgString, "_")
 	if len(ss) != 3 {
 		err = errors.New("org plate invalid")
 		return
 	}
-	pcode, err = strconv.Atoi(ss[0])
+	pinfo.ProvinceCode, err = strconv.Atoi(ss[0])
 	if err != nil {
 		return
 	}
-	pchar = nfconst.PPCharMap[pcode]
-	cchar = ss[1]
+	pinfo.ProvinceChar = nfconst.PPCharMap[pinfo.ProvinceCode]
+	pinfo.CityCode = ss[1]
 	org := ss[2]
-	pnumber = string(([]byte(org))[0:5])
+	pinfo.PlateNo = string(([]byte(org))[0:5])
 	return
 }
 
@@ -139,7 +158,7 @@ func savePlateImage(serial string, bid byte, nid byte, imgdata []byte) (err erro
 		return _err
 	}
 	// 写文件
-	_, _err2 := nfutil.WriteFile(name, imgdata)
+	_, _err2 := nfutil.WriteLocalFile(name, imgdata)
 	if _err2 != nil {
 		return _err2
 	}
@@ -155,7 +174,7 @@ func generateOrgFilePath(serial string, bid byte, nid byte) (path string, err er
 
 	_path := fmt.Sprintf("picp/%s/%04d-%02d-%02d/", serial, y, mon, d)
 	_name := fmt.Sprintf("%02d-%02d_%02d-%02d-%02d%s", bid, nid, h, min, s, nfconst.FILENAME_IMG_EXTENT)
-	_err := nfutil.CreateFolderIfNotExist(_path)
+	_err := nfutil.CreateLocalFolderIfNotExist(_path)
 	if _err != nil {
 		return "", _err
 	}

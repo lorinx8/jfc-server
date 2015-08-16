@@ -23,7 +23,7 @@ value:   value中采取hash map进行保存
 	 field: updatetime				value: longlong时间
 */
 
-type PlateTemp struct {
+type PlateCacheTemp struct {
 	Last_plate           string
 	Last_plate_img       string
 	Using_plate          string
@@ -42,7 +42,7 @@ func generateKey(serial string, bid int, nid int) (key string) {
 }
 
 // 新增或更新
-func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateTemp) (ret string, err error) {
+func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateCacheTemp) (ret string, err error) {
 	key := generateKey(serial, bid, nid)
 	s := reflect.ValueOf(data).Elem()
 	typeOfT := s.Type()
@@ -57,7 +57,7 @@ func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateTemp) (ret
 	return
 }
 
-func getPlateTemp(serial string, bid int, nid int) (ret *PlateTemp, err error) {
+func getPlateTemp(serial string, bid int, nid int) (ret *PlateCacheTemp, err error) {
 	key := generateKey(serial, bid, nid)
 
 	values, err1 := nfredis.Hgetall(key)
@@ -67,7 +67,7 @@ func getPlateTemp(serial string, bid int, nid int) (ret *PlateTemp, err error) {
 	if len(values) == 0 {
 		return nil, nil
 	}
-	ret = &PlateTemp{}
+	ret = &PlateCacheTemp{}
 	if err2 := redis.ScanStruct(values, ret); err2 != nil {
 		return nil, err2
 	}

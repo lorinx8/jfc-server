@@ -15,7 +15,7 @@ func PrintHexArray(arr []byte) {
 	fmt.Println("]")
 }
 
-func WriteFile(filename string, data []byte) (n int, err error) {
+func WriteLocalFile(filename string, data []byte) (n int, err error) {
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {
 		return 0, err
@@ -39,7 +39,7 @@ func GetNowString() (str string) {
 }
 
 // 创建文件路径,如果不存在
-func CreateFolderIfNotExist(path string) error {
+func CreateLocalFolderIfNotExist(path string) error {
 	err := os.MkdirAll(path, 0777)
 	return err
 }

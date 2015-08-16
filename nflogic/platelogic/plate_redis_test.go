@@ -7,7 +7,7 @@ import "jfcsrv/nfconst"
 
 func TestPlateRedisAddOrUpdate(t *testing.T) {
 	nfconst.InitialConst()
-	plate := PlateTemp{
+	plate := PlateCacheTemp{
 		Last_plate:           "BL879",
 		Last_plate_img:       "/pic/test.jpg",
 		Using_plate:          "BL987",
@@ -24,7 +24,7 @@ func TestPlateRedisAddOrUpdate(t *testing.T) {
 
 func TestPlateRedisGetPlateTemp(t *testing.T) {
 	nfconst.InitialConst()
-	s, err := getPlateTemp("sz1234567891", 1, 1)
+	s, err := getPlateTemp("sz1234567890", 1, 1)
 	if s == nil {
 		t.Log("ss nil")
 	} else {
