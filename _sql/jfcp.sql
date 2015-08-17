@@ -55,3 +55,36 @@ COMMENT ON COLUMN tbl_jfcp_plate_result.plate_number IS '5位的车牌号码';
 COMMENT ON COLUMN tbl_jfcp_plate_result.plate_literal IS '车牌字面值';
 COMMENT ON COLUMN tbl_jfcp_plate_result.img_plate IS '车牌图片URL';
 COMMENT ON COLUMN tbl_jfcp_plate_result.img_crop IS '区域截图URL';
+
+
+
+-- function
+CREATE OR REPLACE FUNCTION nf_save_plate_result(in_serial varchar(12), in_bid integer, in_nid integer, 
+	in_car_status integer, in_plate_provice_code integer, in_plate_provice_char varchar(8), in_plate_city_code varchar(8), in_plate_number varchar(8), in_plate_literal varchar(12), in_img_plate varchar(128))
+RETURNS void AS $$
+DECLARE
+	map_block_id varchar;
+	floor_id integer;
+	exit_count integer;
+BEGIN
+	
+	SELECT ref_map_block_id INTO STRICT map_block_id FROM tbl_jfcp_angle_param WHERE device_serial = in_serial and bid = in_bid and nid = in_nid;
+	SELECT ref_floor_id INTO STRICT floor_id FROM tbl_jfc_device WHERE device_serial = in_serial;
+
+	SELECT COUNT(1) INTO exit_count FROM tbl_jfcp_plate_result WHERE ref_floor_id = floor_id and ref_map_block_id = map_block_id;
+	IF exit_count = 0 THEN
+		INSERT INTO tbl_jfcp_plate_result (ref_floor_id, ref_map_block_id, car_status, plate_provice_code, plate_provice_char, plate_city_code, plate_number, plate_literal,img_plate) 
+			VALUES (floor_id, map_block_id, in_car_status, in_plate_provice_code, in_plate_provice_char, in_plate_city_code, in_plate_number, in_plate_literal, in_img_plate);
+	ELSEIF exit_count = 1 THEN
+		UPDATE tbl_jfcp_plate_result SET car_status = in_car_status, plate_provice_code = in_plate_provice_code,
+			plate_provice_char = in_plate_provice_char, plate_city_code = in_plate_city_code, plate_number = in_plate_number, plate_literal = in_plate_literal,img_plate = in_img_plate
+			WHERE ref_floor_id = floor_id and ref_map_block_id = map_block_id;
+	END IF;
+	EXCEPTION
+		WHEN NO_DATA_FOUND THEN
+			RAISE EXCEPTION 'DEVICE ANGEL NOT FOUND';
+		WHEN TOO_MANY_ROWS THEN
+			RAISE EXCEPTION 'DEVICE ANGEL NOT UNIQUE';
+END
+
+$$ LANGUAGE plpgsql;

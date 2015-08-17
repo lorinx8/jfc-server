@@ -13,6 +13,7 @@ const (
 	CMD_PARAM_TYPE_ANGLE                  byte = 1
 	CMD_REQUEST_ONE_ANGLE_RESULT          byte = 12
 	CMD_REQUEST_ONE_ANGLE_RESULT_RESPONSE byte = 13
+	CMD_BAD_RESPONSE                      byte = 255
 
 	SOCK_PACK_HEADER_L byte = 0xF5
 	SOCK_PACK_HEADER_H byte = 0xA6
@@ -27,37 +28,43 @@ const (
 
 	FILENAME_IMG_EXTENT string = ".jpg"
 
-	PP_CHUAN      int    = 0  /* "zh_cuan" 川 */
-	PP_E          int    = 1  /* "zh_e" 鄂 */
-	PP_GAN        int    = 2  /* "zh_gan" 赣*/
-	PP_GAN1       int    = 3  /* "zh_gan1" 甘*/
-	PP_GUI        int    = 4  /* "zh_gui" 贵 */
-	PP_GUI1       int    = 5  /* "zh_gui1" 桂 */
-	PP_HEI        int    = 6  /* "zh_hei" 黑 */
-	PP_HU         int    = 7  /* "zh_hu" 沪 */
-	PP_JI         int    = 8  /* "zh_ji" 冀 */
-	PP_JIN        int    = 9  /* "zh_jin" 津 */
-	PP_JING       int    = 10 /* "zh_jing" 京 */
-	PP_JL         int    = 11 /* "zh_jl" 吉 */
-	PP_LIAO       int    = 12 /* "zh_liao" 辽 */
-	PP_LU         int    = 13 /* "zh_lu" 鲁 */
-	PP_MENG       int    = 14 /* "zh_meng" 蒙 */
-	PP_MIN        int    = 15 /* "zh_min" 闽 */
-	PP_NING       int    = 16 /* "zh_ning" 宁 */
-	PP_QING       int    = 17 /* "zh_qing" 青 */
-	PP_QIONG      int    = 18 /* "zh_qiong" 琼 */
-	PP_SHAN       int    = 19 /* "zh_shan" 陕 */
-	PP_SU         int    = 20 /* "zh_su" 苏 */
-	PP_SX         int    = 21 /* "zh_sx" 晋 */
-	PP_WAN        int    = 22 /* "zh_wan" 皖 */
-	PP_XIANG      int    = 23 /* "zh_xiang" 湘 */
-	PP_XIN        int    = 24 /* "zh_xin" 新 */
-	PP_YU         int    = 25 /* "zh_yu" 豫 */
-	PP_YU1        int    = 26 /* "zh_yu1" 渝 */
-	PP_YUE        int    = 27 /* "zh_yue" 粤 */
-	PP_YUN        int    = 28 /* "zh_yun" 云 */
-	PP_ZANG       int    = 29 /* "zh_zang" 藏 */
-	PP_ZHE        int    = 30 /* "zh_zhe" 浙 */
+	// 相似度临界值
+	PLATE_SIMI_THRESHOLD int = 60
+	// 连续多少次，车牌相似度都小于临界值，则接受该车牌
+	PLATE_SIMI_MAX_COMPARE int = 3
+
+	PP_CHUAN int = 0  /* "zh_cuan" 川 */
+	PP_E     int = 1  /* "zh_e" 鄂 */
+	PP_GAN   int = 2  /* "zh_gan" 赣*/
+	PP_GAN1  int = 3  /* "zh_gan1" 甘*/
+	PP_GUI   int = 4  /* "zh_gui" 贵 */
+	PP_GUI1  int = 5  /* "zh_gui1" 桂 */
+	PP_HEI   int = 6  /* "zh_hei" 黑 */
+	PP_HU    int = 7  /* "zh_hu" 沪 */
+	PP_JI    int = 8  /* "zh_ji" 冀 */
+	PP_JIN   int = 9  /* "zh_jin" 津 */
+	PP_JING  int = 10 /* "zh_jing" 京 */
+	PP_JL    int = 11 /* "zh_jl" 吉 */
+	PP_LIAO  int = 12 /* "zh_liao" 辽 */
+	PP_LU    int = 13 /* "zh_lu" 鲁 */
+	PP_MENG  int = 14 /* "zh_meng" 蒙 */
+	PP_MIN   int = 15 /* "zh_min" 闽 */
+	PP_NING  int = 16 /* "zh_ning" 宁 */
+	PP_QING  int = 17 /* "zh_qing" 青 */
+	PP_QIONG int = 18 /* "zh_qiong" 琼 */
+	PP_SHAN  int = 19 /* "zh_shan" 陕 */
+	PP_SU    int = 20 /* "zh_su" 苏 */
+	PP_SX    int = 21 /* "zh_sx" 晋 */
+	PP_WAN   int = 22 /* "zh_wan" 皖 */
+	PP_XIANG int = 23 /* "zh_xiang" 湘 */
+	PP_XIN   int = 24 /* "zh_xin" 新 */
+	PP_YU    int = 25 /* "zh_yu" 豫 */
+	PP_YU1   int = 26 /* "zh_yu1" 渝 */
+	PP_YUE   int = 27 /* "zh_yue" 粤 */
+	PP_YUN   int = 28 /* "zh_yun" 云 */
+	PP_ZANG  int = 29 /* "zh_zang" 藏 */
+	PP_ZHE   int = 30 /* "zh_zhe" 浙 */
+
 	PP_CHUAN_CHAR string = "川"
 	PP_E_CHAR     string = "鄂"
 	PP_GAN_CHAR   string = "赣"

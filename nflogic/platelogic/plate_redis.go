@@ -12,21 +12,21 @@ import (
 /*
 key:     plate_temp:serial:{设备编号}:bid:{bid序号}:nid:{nid序号}
 value:   value中采取hash map进行保存
-	 field: last_plate  			value: 上一个上报的车牌号
-	 field: last_plate_img  		value: 上一个上报的车牌区域图存储路径
-	 field: using_plate     		value: 正在使用的车牌号
-	 field: using_plate_img 		value: 正在使用的车牌区域图存储路径
-	 field: using_plate_province 	value: 正在使用的车牌号的省份代码
-	 field: using_plate_city		value: 正在使用的车牌号的城市字母
-	 field: crop_img   				value: 上一个上报的大截图存储路径
-	 field: like_count				value: 计数器，前后两次上报车牌相似的次数
-	 field: updatetime				value: longlong时间
+	 field: Last_plate_No  			value: 上一个上报的车牌号
+	 field: Last_plate_img  		value: 上一个上报的车牌区域图存储路径
+	 field: Using_plate_No    		value: 正在使用的车牌号
+	 field: Using_plate_img 		value: 正在使用的车牌区域图存储路径
+	 field: Using_plate_province 	value: 正在使用的车牌号的省份代码
+	 field: Using_plate_city		value: 正在使用的车牌号的城市字母
+	 field: Crop_img   				value: 上一个上报的大截图存储路径
+	 field: Like_count				value: 计数器，前后两次上报车牌相似的次数
+	 field: Updatetime				value: longlong时间
 */
 
 type PlateCacheTemp struct {
-	Last_plate           string
+	Last_plate_No        string
 	Last_plate_img       string
-	Using_plate          string
+	Using_plate_No       string
 	Using_plate_img      string
 	Using_plate_province string
 	Using_plate_city     string
@@ -57,9 +57,8 @@ func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateCacheTemp)
 	return
 }
 
-func getPlateTemp(serial string, bid int, nid int) (ret *PlateCacheTemp, err error) {
+func getPlateTempInCache(serial string, bid int, nid int) (ret *PlateCacheTemp, err error) {
 	key := generateKey(serial, bid, nid)
-
 	values, err1 := nfredis.Hgetall(key)
 	if err1 != nil {
 		return nil, err1
@@ -67,8 +66,9 @@ func getPlateTemp(serial string, bid int, nid int) (ret *PlateCacheTemp, err err
 	if len(values) == 0 {
 		return nil, nil
 	}
-	ret = &PlateCacheTemp{}
-	if err2 := redis.ScanStruct(values, ret); err2 != nil {
+	ret = new(PlateCacheTemp)
+	err2 := redis.ScanStruct(values, ret)
+	if err2 != nil {
 		return nil, err2
 	}
 	return

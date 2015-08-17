@@ -14,6 +14,11 @@ type LogicHandler interface {
 	OnLogicMessage(payload []byte) (cmd byte, ret []byte, err error)
 }
 
+func ReturnBadMessage() (ret []byte) {
+	ret, _ = nfnet.NewNFResponseBytes(nfconst.CMD_BAD_RESPONSE, nil)
+	return
+}
+
 // 消息统一到达此处进行处理, 根据cmd的不同, 进行消息分发
 func OnMsessage(msg []byte) (ret []byte, err error) {
 	pkg, err1 := nfnet.NewNFRequestPackage(msg)
