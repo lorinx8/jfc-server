@@ -42,6 +42,7 @@ plate_number varchar(8), -- 5位的车牌号码
 plate_literal varchar(12), -- 车牌字面值 例如 粤B12345
 img_plate varchar(128), -- 车牌图片URL
 img_crop varchar(128), -- 区域截图URL
+update_time timestamp with time zone DEFAULT now(),
 remark varchar(255)
 );
 
@@ -55,6 +56,13 @@ COMMENT ON COLUMN tbl_jfcp_plate_result.plate_number IS '5位的车牌号码';
 COMMENT ON COLUMN tbl_jfcp_plate_result.plate_literal IS '车牌字面值';
 COMMENT ON COLUMN tbl_jfcp_plate_result.img_plate IS '车牌图片URL';
 COMMENT ON COLUMN tbl_jfcp_plate_result.img_crop IS '区域截图URL';
+COMMENT ON COLUMN tbl_jfcp_plate_result.update_time IS '更新时间';
+
+
+
+
+
+
 
 
 

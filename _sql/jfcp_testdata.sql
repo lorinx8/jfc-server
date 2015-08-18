@@ -56,3 +56,5 @@ INSERT INTO tbl_jfcp_angle_param (device_serial, ref_map_block_id, bid, bangle, 
 
 INSERT INTO tbl_jfcp_angle_param (device_serial, ref_map_block_id, bid, bangle, nid, nangle, crop_x, crop_y, crop_w, crop_h, remark) 
 	VALUES ('sz1234567890', 'rB2019', 2, 130, 4, 90, 300, 300, 640, 320, '');
+
+

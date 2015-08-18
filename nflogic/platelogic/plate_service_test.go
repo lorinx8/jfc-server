@@ -25,3 +25,8 @@ func TestOnLogicMessage(t *testing.T) {
 	cmd, ret, err := logic.OnLogicMessage(b)
 	t.Log(cmd, ret, err)
 }
+
+func TestParseOrgPlateString(t *testing.T) {
+	ret, err := parseOrgPlateString("7_B12345")
+	t.Log(ret, err)
+}

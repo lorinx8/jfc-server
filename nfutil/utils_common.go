@@ -3,16 +3,19 @@ package nfutil
 import (
 	"bufio"
 	"fmt"
+	"jfcsrv/nflog"
 	"os"
 	"time"
 )
 
+var jlog = nflog.Logger
+
 func PrintHexArray(arr []byte) {
-	fmt.Print("[ ")
+	jlog.Debug("[ ")
 	for _, v := range arr {
-		fmt.Printf("%02X ", v)
+		jlog.Debug("%02X ", v)
 	}
-	fmt.Println("]")
+	jlog.Debug("]")
 }
 
 func WriteLocalFile(filename string, data []byte) (n int, err error) {

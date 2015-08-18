@@ -5,15 +5,19 @@ import (
 )
 
 const (
-	CONFIG_FILENAME string = "D:\\Devo\\go\\src\\jfcsrv\\nfconst\\cfg\\j2.cfg"
+	CONFIG_FILENAME string = "cfg/j2.cfg"
 
 	// sock command and socket related
-	CMD_REQUEST_PARAM                     byte = 10
-	CMD_REQUEST_PARAM_RESPONSE            byte = 11
-	CMD_PARAM_TYPE_ANGLE                  byte = 1
+	CMD_REQUEST_PARAM          byte = 10
+	CMD_REQUEST_PARAM_RESPONSE byte = 11
+	CMD_PARAM_TYPE_ANGLE       byte = 1
+
 	CMD_REQUEST_ONE_ANGLE_RESULT          byte = 12
 	CMD_REQUEST_ONE_ANGLE_RESULT_RESPONSE byte = 13
-	CMD_BAD_RESPONSE                      byte = 255
+	CMD_ONE_ANGLE_RESULT_NO_NEED_CROP     byte = 0
+	CMD_ONE_ANGLE_RESULT_NEED_CROP        byte = 1
+
+	CMD_BAD_RESPONSE byte = 255
 
 	SOCK_PACK_HEADER_L byte = 0xF5
 	SOCK_PACK_HEADER_H byte = 0xA6
@@ -25,13 +29,15 @@ const (
 	LEN_DEVICE_SERIAL      int = 12
 	LEN_MAX_PLATE_NUMBER   int = 12        // 车牌最大字符长度
 	LEN_MAX_PLATE_IMG_SIZE int = 1024 * 15 // 车牌图片最多的字节数
+	LEN_TCP_BUFFER         int = 2048
+	LEN_MIN_PACKAGE        int = 8 // 一个数据包的最小字节
 
 	FILENAME_IMG_EXTENT string = ".jpg"
 
 	// 相似度临界值
 	PLATE_SIMI_THRESHOLD int = 60
 	// 连续多少次，车牌相似度都小于临界值，则接受该车牌
-	PLATE_SIMI_MAX_COMPARE int = 3
+	PLATE_SIMI_MAX_COMPARE int = 1
 
 	PP_CHUAN int = 0  /* "zh_cuan" 川 */
 	PP_E     int = 1  /* "zh_e" 鄂 */

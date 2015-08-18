@@ -18,7 +18,7 @@ func TestPlateRedisAddOrUpdate(t *testing.T) {
 		Like_count:           "1",
 		Updatetime:           nfutil.GetNowString(),
 	}
-	ss, err := addOrUpdatePlateTemp("sz1234567890", 1, 1, &plate)
+	ss, err := addOrUpdatePlateTempCache("sz1234567890", 1, 1, &plate)
 	t.Log(ss, err)
 }
 

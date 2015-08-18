@@ -79,3 +79,50 @@ func GetCloudFileUrl(remoteKey string) (url string) {
 	baseUrl := kodo.MakeBaseUrl(DOMAIN, remoteKey) // 得到下载 url
 	return baseUrl
 }
+
+func CopyCloudFile(srcKey string, destKey string) error {
+	if client == nil {
+		getClient()
+	}
+	ctx := context.Background()
+	err := bucket.Copy(ctx, srcKey, destKey)
+	return err
+}
+
+func ListCloudFile(prefix string) (ret []kodo.ListItem) {
+	if client == nil {
+		getClient()
+	}
+	ctx := context.Background()
+	var allentries []kodo.ListItem = make([]kodo.ListItem, 0, 10240)
+	var marker string = ""
+	for {
+		entries, markerOut, err := bucket.List(ctx, prefix, marker, 2048)
+		if len(entries) > 0 {
+			allentries = append(allentries, entries...)
+		}
+		if err != nil {
+			break
+		}
+		if markerOut != "" {
+			marker = markerOut
+		} else {
+			break
+		}
+	}
+	return allentries
+}
+
+func DellCloudFileByPathPrefix(prefix string) error {
+	allentries := ListCloudFile(prefix)
+	keys := make([]string, 0, len(allentries))
+	for _, v := range allentries {
+		keys = append(keys, v.Key)
+	}
+	if client == nil {
+		getClient()
+	}
+	ctx := context.Background()
+	_, err := bucket.BatchDelete(ctx, keys...)
+	return err
+}

@@ -2,9 +2,8 @@ package platelogic
 
 import (
 	"fmt"
-	"reflect"
-
 	"jfcsrv/nfredis"
+	"reflect"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -42,7 +41,7 @@ func generateKey(serial string, bid int, nid int) (key string) {
 }
 
 // 新增或更新
-func addOrUpdatePlateTemp(serial string, bid int, nid int, data *PlateCacheTemp) (ret string, err error) {
+func addOrUpdatePlateTempCache(serial string, bid int, nid int, data *PlateCacheTemp) (ret string, err error) {
 	key := generateKey(serial, bid, nid)
 	s := reflect.ValueOf(data).Elem()
 	typeOfT := s.Type()

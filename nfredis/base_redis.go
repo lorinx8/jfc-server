@@ -71,6 +71,7 @@ func Hmset(args ...interface{}) (ret string, err error) {
 func Hgetall(key interface{}) (ret []interface{}, err error) {
 	c := getConn()
 	reply, err1 := c.Do("HGETALL", key)
+	defer c.Close()
 	values, err2 := redis.Values(reply, err1)
 	return values, err2
 }

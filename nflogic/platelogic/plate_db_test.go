@@ -18,7 +18,7 @@ func TestAddOrUpdataPlateResult(t *testing.T) {
 		PlateImg:     "http://7xl4c2.com1.z0.glb.clouddn.com/picp/sz1234567890/2015-08-17/01-01_15-33-17.jpg",
 	}
 
-	err := addOrUpdataPlateResult(r)
+	err := addOrUpdataPlateResultToDb(r)
 	t.Log(err)
 
 }

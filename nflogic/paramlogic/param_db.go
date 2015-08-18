@@ -23,7 +23,7 @@ func queryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err er
 		return nil, err1
 	}
 
-	rows, err2 := db.Query("select * from tbl_jfcp_angle_param order by bid, nid where device_serial = $1", serial)
+	rows, err2 := db.Query("select * from tbl_jfcp_angle_param where device_serial = $1 order by bid, nid ", serial)
 	if err2 != nil {
 		return nil, err2
 	}

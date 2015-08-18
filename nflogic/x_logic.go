@@ -2,12 +2,14 @@ package nflogic
 
 import (
 	"errors"
-	"fmt"
 	"jfcsrv/nfconst"
+	"jfcsrv/nflog"
 	"jfcsrv/nflogic/paramlogic"
 	"jfcsrv/nflogic/platelogic"
 	"jfcsrv/nfnet"
 )
+
+var jlog = nflog.Logger
 
 type LogicHandler interface {
 	// 入参为负载字节切片
@@ -26,7 +28,7 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 		err = err1
 		return nil, err
 	}
-	fmt.Printf("OnMessage: cmd = %d, length = %d\n", pkg.Cmd, pkg.Length)
+	jlog.Infof("OnMessage: cmd = %d, length = %d", pkg.Cmd, pkg.Length)
 
 	var handler LogicHandler
 	switch pkg.Cmd {
@@ -35,6 +37,7 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 	case nfconst.CMD_REQUEST_ONE_ANGLE_RESULT:
 		handler = &platelogic.PlateResultLogic{}
 	default:
+		jlog.Error("no command handler")
 		err = errors.New("no command handler")
 		return nil, err
 	}
