@@ -45,7 +45,7 @@ func handle_tcp_accept(tcpListener *net.TCPListener) {
 				go write_tcp_conn(tcpConn, outDataChan)
 			*/
 			p := pprof.Lookup("goroutine")
-			jlog.Infof("==================== one tcp connected, goroutine count = %d", p.Count())
+			jlog.Infof("\n\n==================== one tcp connected >> %s, goroutine count = %d", clientConn.RemoteAddr().String(), p.Count())
 		}
 	}
 }
@@ -60,8 +60,12 @@ func handle_logic(clientConn *net.TCPConn) {
 	for {
 		n, err := clientConn.Read(tcpBuffer[0:])
 		if err != nil {
-			// 跳出循环， 并处理已经接收到的数据
-			jlog.Error("tcp read error, ", err.Error(), ", break read loop")
+			if err.Error() == "EOF" {
+				// 跳出循环， 并处理已经接收到的数据
+				jlog.Infof("%s close, tcp read end, break read loop", clientConn.RemoteAddr().String())
+			} else {
+				jlog.Error("tcp read error, ", err.Error(), ", break read loop")
+			}
 			break
 		}
 		done, buf, err1 := handle.AddStream(tcpBuffer[0:n])
@@ -94,7 +98,7 @@ func msgHandler(clientConn *net.TCPConn, msg []byte) {
 		jlog.Error("nflogic OnMsessage error, ", err2.Error())
 		resp = nflogic.ReturnBadMessage()
 	}
-	jlog.Debug("Send: ")
+	jlog.Debug("Data ready to send...")
 	nfutil.PrintHexArray(resp)
 	_, err3 := clientConn.Write(resp)
 	if err3 != nil {

@@ -2,6 +2,7 @@ package nfutil
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"jfcsrv/nflog"
 	"os"
@@ -11,11 +12,14 @@ import (
 var jlog = nflog.Logger
 
 func PrintHexArray(arr []byte) {
-	jlog.Debug("[ ")
+	writer := new(bytes.Buffer)
+	writer.WriteString("[ ")
 	for _, v := range arr {
-		jlog.Debug("%02X ", v)
+		str := fmt.Sprintf("%02X ", v)
+		writer.WriteString(str)
 	}
-	jlog.Debug("]")
+	writer.WriteString(" ]")
+	jlog.Debug(writer.String())
 }
 
 func WriteLocalFile(filename string, data []byte) (n int, err error) {

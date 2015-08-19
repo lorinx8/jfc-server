@@ -2,6 +2,8 @@ package nfredis
 
 import (
 	"jfcsrv/nfconst"
+	"jfcsrv/nflog"
+	"os"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -10,6 +12,8 @@ import (
 var (
 	pool *redis.Pool
 )
+
+var jlog = nflog.Logger
 
 func getConn() (c redis.Conn) {
 	if pool != nil {
@@ -25,7 +29,8 @@ func getConn() (c redis.Conn) {
 			Dial: func() (redis.Conn, error) {
 				c, err := redis.Dial("tcp", connstr)
 				if err != nil {
-					return nil, err
+					jlog.Critical("redis connect failed, error:", err)
+					os.Exit(1)
 				}
 				// 选择db
 				c.Do("SELECT", dbIndex)

@@ -28,7 +28,7 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 		err = err1
 		return nil, err
 	}
-	jlog.Infof("OnMessage: cmd = %d, length = %d", pkg.Cmd, pkg.Length)
+	jlog.Infof("---------- OnMessage: cmd = %d, length = %d", pkg.Cmd, pkg.Length)
 
 	var handler LogicHandler
 	switch pkg.Cmd {

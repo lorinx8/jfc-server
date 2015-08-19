@@ -13,9 +13,9 @@ var (
 
 func loadAppConfig() {
 	appConfig := `
-<seelog minlevel="debug">
+<seelog minlevel="trace">
     <outputs formatid="common">
-        <rollingfile type="date" filename="jlogs/jcar.log" datepattern="20060102" maxrolls="7"/>
+        <rollingfile type="date" filename="log/jcar.log" datepattern="20060102" maxrolls="7"/>
     </outputs>
     <formats>
         <format id="common" format="%Date %Time [%LEV] %Func:%Line : %Msg%n" />

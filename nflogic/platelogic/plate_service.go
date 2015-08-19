@@ -55,7 +55,7 @@ func handlePlateReport(msg []byte) (ret byte) {
 	img_data := msg[n:]
 
 	// 业务处理
-	jlog.Infof("Device Serial:%s, report angle result: bid=%d, nid=%d, count=%d, img_n=%d\n", t.Serial, t.Bid, t.Nid, t.Count, n_img)
+	jlog.Infof("Device Serial:%s, report angle result: bid=%d, nid=%d, count=%d, img_n=%d", t.Serial, t.Bid, t.Nid, t.Count, n_img)
 	// 处理上报数据无车牌的情况
 	if t.Count == 0 {
 		handlePlateInPool(serial, int(t.Bid), int(t.Nid), &PlateNumberInfo{})
@@ -90,16 +90,16 @@ func handlePlateInPool(serial string, bid int, nid int, pinfo *PlateNumberInfo) 
 		return false, err1 // 不再处理这个了
 	}
 
+	var needCropImg bool
 	// 说明这个设备的这个位置，还没有数据
 	if plateCacheTemp == nil {
-		fmt.Println("cond 1: no data in cache for", serial, bid, nid, ", accept it")
+		jlog.Debug("cond 1: no data in cache for", serial, bid, nid, ", accept it")
 		// 处理第一个数据， 直接接受这个车牌
-		acceptPlateNumber(serial, bid, nid, pinfo, nil)
-		accepe = true
+		needCropImg, _ = acceptPlateNumber(serial, bid, nid, pinfo, nil)
 	} else {
 		_last_plate_no := plateCacheTemp.Last_plate_No
 		_new_plate_no := pinfo.PlateNo
-		jlog.Debug("cond 2: have data in cache for", serial, bid, nid, "new palte:", _new_plate_no, "old plate:", plateCacheTemp.Last_plate_No, ", do extra work")
+		jlog.Debug("cond 2: have data in cache for ", serial, bid, nid, ", new palte:", _new_plate_no, ", old plate:", plateCacheTemp.Last_plate_No, ", do extra work.")
 
 		similarty := calSimilarity(_new_plate_no, _last_plate_no)
 
@@ -113,8 +113,7 @@ func handlePlateInPool(serial string, bid int, nid int, pinfo *PlateNumberInfo) 
 			_count := getCachePlateTempLikeCount(plateCacheTemp)
 			if _count >= nfconst.PLATE_SIMI_MAX_COMPARE {
 				jlog.Debug("cond 2.2: similarty above threshold > MAX_COMPARE, accept it")
-				acceptPlateNumber(serial, bid, nid, pinfo, plateCacheTemp)
-				accepe = true
+				needCropImg, _ = acceptPlateNumber(serial, bid, nid, pinfo, plateCacheTemp)
 			} else {
 				jlog.Debug("cond 2.3: similarty above threshold, save it temporary")
 				increCachePlateTempLikeCount(plateCacheTemp)
@@ -123,7 +122,7 @@ func handlePlateInPool(serial string, bid int, nid int, pinfo *PlateNumberInfo) 
 		}
 	}
 
-	return accepe, nil
+	return needCropImg, nil
 }
 
 func setCachePlateTempLikeCount(p *PlateCacheTemp, count int) {
@@ -175,7 +174,7 @@ func saveInCacheTemporary(serial string, bid int, nid int, pinfo *PlateNumberInf
 // 采用这个车牌，需要做这么几件事情
 // 更新缓存数据，写入数据库，向云存储中上传数据
 // 如果接受了一个车牌，那么就需要向客户端请求大的截图
-func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, pcache *PlateCacheTemp) (ret *PlateCacheTemp) {
+func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, pcache *PlateCacheTemp) (needCropImg bool, ret *PlateCacheTemp) {
 	// 对于相同的键，直接写入既可，redis自己覆盖掉
 	var platestatus int
 	var url_unique, url_history string
@@ -187,39 +186,70 @@ func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, 
 
 	if pinfo.PlateNo == "" {
 		// 无车牌
+		jlog.Trace("no plate, clear cacha temp")
 		clearPlateCacheTempStruct(pcache)
 		platestatus = 0
 	} else {
-		transferPlateInfoToPlateCacheStruct(pinfo, pcache)
+		jlog.Trace("have plate, do extra work")
 		platestatus = 1
 	}
 	// 如果新的车牌跟之前已经接受的车牌一致，那么就不用上传图片了, 也不需要更新数据库中的记录了
 	// 需要做两件事情， 一个是上传到该角度需要使用的文件，然后再拷贝一份到历史数据中去
 
-	if pinfo.PlateNo != "" && pinfo.PlateNo != pcache.Using_plate_No {
+	var needUploadFile bool = false
+	var needSaveDb bool = false
+
+	if pinfo.PlateNo != pcache.Using_plate_No {
+		jlog.Trace("have new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need save to db")
+		needSaveDb = true
+	}
+
+	if pinfo.PlateNo != "" {
+		if pinfo.PlateNo != pcache.Using_plate_No {
+			jlog.Trace("have not nil new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need upload")
+			needUploadFile = true
+		}
+		if pcache.Last_plate_img == "" || pcache.Using_plate_img == "" {
+			jlog.Trace("last img or using img is nil, need upload and save to db")
+			needUploadFile = true
+			needSaveDb = true
+		}
+	}
+
+	if needUploadFile {
 		url_unique, url_history, err = uploadAcceptPlateFile(serial, bid, nid, pinfo.ImageByte, int64(len(pinfo.ImageByte)))
 		if err != nil {
+			jlog.Error("file upload error:", err)
+		} else {
+			jlog.Trace("file uploaded - ", url_unique, ", ", url_history)
 			pcache.Last_plate_img = url_history
 			pcache.Using_plate_img = url_unique
 		}
 	}
 
+	transferPlateInfoToPlateCacheStruct(pinfo, pcache)
+	jlog.Trace("add or update cache - ", serial, bid, nid, pcache)
 	addOrUpdatePlateTempCache(serial, bid, nid, pcache)
-	var r *PlateResultToDb = &PlateResultToDb{
-		Serial:          serial,
-		Bid:             bid,
-		Nid:             nid,
-		ParkStatus:      platestatus,
-		ProvinceCode:    pinfo.ProvinceCode,
-		ProvinceChar:    nfconst.PPCharMap[pinfo.ProvinceCode],
-		CityCode:        pinfo.CityCode,
-		PlateNo:         pinfo.PlateNo,
-		PlateLiteral:    nfconst.PPCharMap[pinfo.ProvinceCode] + pinfo.CityCode + " " + pinfo.PlateNo,
-		PlateImgUnique:  url_unique,
-		PlateImgHistory: url_history,
+	if needSaveDb {
+		var r *PlateResultToDb = &PlateResultToDb{
+			Serial:          serial,
+			Bid:             bid,
+			Nid:             nid,
+			ParkStatus:      platestatus,
+			ProvinceCode:    pinfo.ProvinceCode,
+			ProvinceChar:    nfconst.PPCharMap[pinfo.ProvinceCode],
+			CityCode:        pinfo.CityCode,
+			PlateNo:         pinfo.PlateNo,
+			PlateLiteral:    nfconst.PPCharMap[pinfo.ProvinceCode] + pinfo.CityCode + " " + pinfo.PlateNo,
+			PlateImgUnique:  url_unique,
+			PlateImgHistory: url_history,
+		}
+		jlog.Trace("save to db - ", r)
+		addOrUpdataPlateResultToDb(r)
 	}
-	addOrUpdataPlateResultToDb(r)
-	return pcache
+
+	needCropImg = needSaveDb
+	return needCropImg, pcache
 }
 
 func clearPlateCacheTempStruct(pcache *PlateCacheTemp) (ret *PlateCacheTemp) {
@@ -251,6 +281,7 @@ func uploadAcceptPlateFile(serial string, bid int, nid int, b []byte, size int64
 	// 先覆盖唯一的文件，然后再拷贝一个历史的
 	cloud_key_unique := generateCloudPlateImageKeyUnique(serial, bid, nid)
 	cloud_key_history := generateCloudPlateImageKeyHistory(serial, bid, nid)
+	jlog.Trace("upload file, cloud_key_unique: ", cloud_key_unique, ", cloud_key_history: ", cloud_key_history)
 	// 覆盖唯一的文件
 	url_unique, err = nfutil.PutLocalToCloud(b, size, cloud_key_unique)
 	if err != nil {
@@ -259,7 +290,7 @@ func uploadAcceptPlateFile(serial string, bid int, nid int, b []byte, size int64
 	}
 
 	// 然后进行拷贝
-	err = nfutil.CopyCloudFile(cloud_key_unique, cloud_key_history)
+	url_history, err = nfutil.CopyCloudFile(cloud_key_unique, cloud_key_history)
 	if err != nil {
 		// 打印日志
 		jlog.Error("CopyCloudFile error: ", err)

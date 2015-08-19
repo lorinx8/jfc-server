@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	CONFIG_FILENAME string = "cfg/j2.cfg"
+	CONFIG_FILENAME string = "etc/j2.config"
 
 	// sock command and socket related
 	CMD_REQUEST_PARAM          byte = 10

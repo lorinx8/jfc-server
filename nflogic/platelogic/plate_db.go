@@ -32,6 +32,9 @@ func addOrUpdataPlateResultToDb(r *PlateResultToDb) (err error) {
 		return err2
 	}
 	_, err3 := stmt.Exec(r.Serial, r.Bid, r.Nid, r.ParkStatus, r.ProvinceCode, r.ProvinceChar, r.CityCode, r.PlateNo, r.PlateLiteral, r.PlateImgUnique, r.PlateImgHistory)
+	//vvv22, err22 := result.LastInsertId()
+	//vvv33, err33 := result.RowsAffected()
+	//jlog.Debug(vvv22, err22, vvv33, err33)
 	if err3 != nil {
 		jlog.Error("db exec stmt error: ", err3)
 		return err3

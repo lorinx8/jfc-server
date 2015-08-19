@@ -12,7 +12,7 @@ const (
 	AK         string = "oqWdc7mQYLMbciPiosBR9BU2McR-EAkgP7oWFWRn"
 	SK         string = "qCP3Gue30GXYXgMdSKFMcPTiL6wraEpotIG-KFF-"
 	BUCKETNAME string = "j2car"
-	DOMAIN     string = "7xl4c2.com1.z0.glb.clouddn.com"
+	DOMAIN     string = "img.papakaka.com"
 )
 
 var (
@@ -80,13 +80,14 @@ func GetCloudFileUrl(remoteKey string) (url string) {
 	return baseUrl
 }
 
-func CopyCloudFile(srcKey string, destKey string) error {
+func CopyCloudFile(srcKey string, destKey string) (url string, err error) {
 	if client == nil {
 		getClient()
 	}
 	ctx := context.Background()
-	err := bucket.Copy(ctx, srcKey, destKey)
-	return err
+	err = bucket.Copy(ctx, srcKey, destKey)
+	url = GetCloudFileUrl(destKey)
+	return url, err
 }
 
 func ListCloudFile(prefix string) (ret []kodo.ListItem) {
