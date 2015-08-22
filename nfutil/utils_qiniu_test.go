@@ -30,6 +30,12 @@ func TestListCloudFile(t *testing.T) {
 }
 
 func TestDellCloudFileByPathPrefix(t *testing.T) {
-	err := DellCloudFileByPathPrefix("picp/sz1234567890/2015-08-18")
+	err := DellCloudFileByPathPrefix("picp")
 	t.Log(err)
+}
+
+func TestDellCloudFileByPathPrefixPartily(t *testing.T) {
+
+	DellCloudFileByPathPrefixPartily("picp", 1000)
+
 }

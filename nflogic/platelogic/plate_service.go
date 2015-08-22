@@ -86,36 +86,36 @@ func handlePlateInPool(serial string, bid int, nid int, pinfo *PlateNumberInfo) 
 	// 从缓存中取得已有的车牌缓存结果
 	plateCacheTemp, err1 := getPlateTempInCache(serial, bid, nid)
 	if err1 != nil {
-		jlog.Error("get plate in cache error ", err, serial, bid, nid)
+		jlog.Error("get plate in cache error: ", err1, " - ", serial, bid, nid)
 		return false, err1 // 不再处理这个了
 	}
 
 	var needCropImg bool
 	// 说明这个设备的这个位置，还没有数据
 	if plateCacheTemp == nil {
-		jlog.Debug("cond 1: no data in cache for", serial, bid, nid, ", accept it")
+		jlog.Info("cond 1: no data in cache for", serial, bid, nid, ", accept it")
 		// 处理第一个数据， 直接接受这个车牌
 		needCropImg, _ = acceptPlateNumber(serial, bid, nid, pinfo, nil)
 	} else {
 		_last_plate_no := plateCacheTemp.Last_plate_No
 		_new_plate_no := pinfo.PlateNo
-		jlog.Debug("cond 2: have data in cache for ", serial, bid, nid, ", new palte:", _new_plate_no, ", old plate:", plateCacheTemp.Last_plate_No, ", do extra work.")
+		jlog.Info("cond 2: have data in cache for ", serial, bid, nid, ", new palte:", _new_plate_no, ", old plate:", plateCacheTemp.Last_plate_No, ", do extra work.")
 
 		similarty := calSimilarity(_new_plate_no, _last_plate_no)
 
 		// 有三个字符都不一样
 		if similarty < nfconst.PLATE_SIMI_THRESHOLD {
-			jlog.Debug("cond 2.1: similarty below threshold, save it temporary")
+			jlog.Info("cond 2.1: similarty below threshold, save it temporary")
 			setCachePlateTempLikeCount(plateCacheTemp, 0)
 			saveInCacheTemporary(serial, bid, nid, pinfo, plateCacheTemp)
 		} else {
 			// 三个字符都一样,并且大于了最多比较次数，则接受
 			_count := getCachePlateTempLikeCount(plateCacheTemp)
 			if _count >= nfconst.PLATE_SIMI_MAX_COMPARE {
-				jlog.Debug("cond 2.2: similarty above threshold > MAX_COMPARE, accept it")
+				jlog.Info("cond 2.2: similarty above threshold > MAX_COMPARE, accept it")
 				needCropImg, _ = acceptPlateNumber(serial, bid, nid, pinfo, plateCacheTemp)
 			} else {
-				jlog.Debug("cond 2.3: similarty above threshold, save it temporary")
+				jlog.Info("cond 2.3: similarty above threshold, save it temporary")
 				increCachePlateTempLikeCount(plateCacheTemp)
 				saveInCacheTemporary(serial, bid, nid, pinfo, plateCacheTemp)
 			}
@@ -175,6 +175,7 @@ func saveInCacheTemporary(serial string, bid int, nid int, pinfo *PlateNumberInf
 // 更新缓存数据，写入数据库，向云存储中上传数据
 // 如果接受了一个车牌，那么就需要向客户端请求大的截图
 func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, pcache *PlateCacheTemp) (needCropImg bool, ret *PlateCacheTemp) {
+	jlog.Infof("accept plate number: %s -- %d - %d", serial, bid, nid)
 	// 对于相同的键，直接写入既可，redis自己覆盖掉
 	var platestatus int
 	var url_unique, url_history string
@@ -186,11 +187,11 @@ func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, 
 
 	if pinfo.PlateNo == "" {
 		// 无车牌
-		jlog.Trace("no plate, clear cacha temp")
+		jlog.Debug("no plate, clear cacha temp")
 		clearPlateCacheTempStruct(pcache)
 		platestatus = 0
 	} else {
-		jlog.Trace("have plate, do extra work")
+		jlog.Debug("have plate, do extra work")
 		platestatus = 1
 	}
 	// 如果新的车牌跟之前已经接受的车牌一致，那么就不用上传图片了, 也不需要更新数据库中的记录了
@@ -200,17 +201,17 @@ func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, 
 	var needSaveDb bool = false
 
 	if pinfo.PlateNo != pcache.Using_plate_No {
-		jlog.Trace("have new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need save to db")
+		jlog.Debug("have new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need save to db")
 		needSaveDb = true
 	}
 
 	if pinfo.PlateNo != "" {
 		if pinfo.PlateNo != pcache.Using_plate_No {
-			jlog.Trace("have not nil new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need upload")
+			jlog.Debug("have not nil new plate ", pinfo.PlateNo, ", and not same as the old one ", pcache.Using_plate_No, ", need upload")
 			needUploadFile = true
 		}
 		if pcache.Last_plate_img == "" || pcache.Using_plate_img == "" {
-			jlog.Trace("last img or using img is nil, need upload and save to db")
+			jlog.Debug("last img or using img is nil, need upload and save to db")
 			needUploadFile = true
 			needSaveDb = true
 		}
@@ -221,14 +222,14 @@ func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, 
 		if err != nil {
 			jlog.Error("file upload error:", err)
 		} else {
-			jlog.Trace("file uploaded - ", url_unique, ", ", url_history)
+			jlog.Debug("file uploaded - ", url_unique, ", ", url_history)
 			pcache.Last_plate_img = url_history
 			pcache.Using_plate_img = url_unique
 		}
 	}
 
 	transferPlateInfoToPlateCacheStruct(pinfo, pcache)
-	jlog.Trace("add or update cache - ", serial, bid, nid, pcache)
+	jlog.Debug("add or update cache - ", serial, bid, nid, pcache)
 	addOrUpdatePlateTempCache(serial, bid, nid, pcache)
 	if needSaveDb {
 		var r *PlateResultToDb = &PlateResultToDb{
@@ -244,7 +245,7 @@ func acceptPlateNumber(serial string, bid int, nid int, pinfo *PlateNumberInfo, 
 			PlateImgUnique:  url_unique,
 			PlateImgHistory: url_history,
 		}
-		jlog.Trace("save to db - ", r)
+		jlog.Debug("save to db - ", r)
 		addOrUpdataPlateResultToDb(r)
 	}
 
@@ -281,7 +282,7 @@ func uploadAcceptPlateFile(serial string, bid int, nid int, b []byte, size int64
 	// 先覆盖唯一的文件，然后再拷贝一个历史的
 	cloud_key_unique := generateCloudPlateImageKeyUnique(serial, bid, nid)
 	cloud_key_history := generateCloudPlateImageKeyHistory(serial, bid, nid)
-	jlog.Trace("upload file, cloud_key_unique: ", cloud_key_unique, ", cloud_key_history: ", cloud_key_history)
+	jlog.Debug("upload file, cloud_key_unique: ", cloud_key_unique, ", cloud_key_history: ", cloud_key_history)
 	// 覆盖唯一的文件
 	url_unique, err = nfutil.PutLocalToCloud(b, size, cloud_key_unique)
 	if err != nil {
@@ -387,7 +388,7 @@ func generateOrgFilePath(serial string, bid int, nid int) (path string, err erro
 // picp/{设备号}/{年-月-日}/{bid}-{nid}_{时分秒}.jpg
 func generateCloudPlateImageKeyHistory(serial string, bid int, nid int) (key string) {
 	y, mon, d, h, min, s := nfutil.GetNow()
-	key = fmt.Sprintf("picp_history/%s/%04d-%02d-%02d/%02d-%02d_%02d-%02d-%02d%s", serial, y, mon, d, bid, nid, h, min, s, nfconst.FILENAME_IMG_EXTENT)
+	key = fmt.Sprintf("picp_history/%04d-%02d-%02d/%s/%02d-%02d_%02d-%02d-%02d%s", y, mon, d, serial, bid, nid, h, min, s, nfconst.FILENAME_IMG_EXTENT)
 	return
 }
 

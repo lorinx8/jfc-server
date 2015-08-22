@@ -13,13 +13,17 @@ var (
 
 func loadAppConfig() {
 	appConfig := `
-<seelog minlevel="trace">
+<seelog minlevel="info">
     <outputs formatid="common">
-        <rollingfile type="date" filename="log/jcar.log" datepattern="20060102" maxrolls="7"/>
+        <rollingfile type="size" filename="log/jcar.log" maxsize="500000000" maxrolls="5"/>	
+		<filter levels="critical,error">
+			<rollingfile type="size" filename="log/jcar.wrong.log" maxsize="50000000" maxrolls="5" formatid="critical"/>	
+        </filter>
     </outputs>
     <formats>
         <format id="common" format="%Date %Time [%LEV] %Func:%Line : %Msg%n" />
         <format id="critical" format="%Date %Time [%LEV] %File %Func:%Line %Msg%n" />
+		<format id="trace" format="%Date %Time %Msg%n" />
         <format id="criticalemail" format="Critical error on our server!\n    %Time %Date %RelFile %Func %Msg \nSent by Seelog"/>
     </formats>
 </seelog>

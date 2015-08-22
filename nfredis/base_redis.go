@@ -3,7 +3,6 @@ package nfredis
 import (
 	"jfcsrv/nfconst"
 	"jfcsrv/nflog"
-	"os"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -23,17 +22,17 @@ func getConn() (c redis.Conn) {
 		dbIndex := nfconst.JCfg.RedisDbIndex
 		pool = &redis.Pool{
 			// 从配置文件获取maxidle以及maxactive，取不到则用后面的默认值
-			MaxIdle:     1,
-			MaxActive:   10,
-			IdleTimeout: 180 * time.Second,
+			MaxIdle:     10,
+			MaxActive:   100,
+			IdleTimeout: 60 * time.Second,
 			Dial: func() (redis.Conn, error) {
 				c, err := redis.Dial("tcp", connstr)
 				if err != nil {
 					jlog.Critical("redis connect failed, error:", err)
-					os.Exit(1)
+				} else {
+					// 选择db
+					c.Do("SELECT", dbIndex)
 				}
-				// 选择db
-				c.Do("SELECT", dbIndex)
 				return c, nil
 			},
 		}

@@ -3,9 +3,9 @@ package paramlogic
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 
 	"jfcsrv/nfconst"
+	"jfcsrv/nflog"
 )
 
 // 参数请求消息,数据包负载结构体
@@ -32,6 +32,8 @@ type baseAngle struct {
 type ParamLogic struct {
 }
 
+var jlog = nflog.Logger
+
 func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err error) {
 
 	var t paramRequestPackage
@@ -40,7 +42,7 @@ func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err e
 	var s string = string(t.Serial[0:len(t.Serial)])
 
 	// 业务处理
-	fmt.Println("Device Serial:", s, "request param with type", t.ParamType)
+	jlog.Info("Device Serial:", s, "request param with type", t.ParamType)
 
 	switch t.ParamType {
 	case nfconst.CMD_PARAM_TYPE_ANGLE:

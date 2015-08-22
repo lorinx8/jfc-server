@@ -1,19 +1,35 @@
 package main
 
 import (
+	"fmt"
 	"jfcsrv/nfconst"
 	"jfcsrv/nflog"
 	"jfcsrv/nflogic"
 	"jfcsrv/nfnet"
 	"jfcsrv/nfutil"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"runtime"
-	"runtime/pprof"
 )
 
 var jlog = nflog.Logger
 
 func main() {
+	defer func() { // 必须要先声明defer，否则不能捕获到panic异常
+		if err := recover(); err != nil {
+			jlog.Critical("!!!!!!!!!!!!! MAIN PANIC error: ", err)
+			fmt.Println("!!!!!!!!!!!!! MAIN PANIC error: ", err)
+		}
+	}()
+
+	go func() {
+		http.ListenAndServe(":6060", nil)
+	}()
+	begin()
+}
+
+func begin() {
 	jlog.Info("JFC Server For Papakaka...")
 	jlog.Info("Config loading...")
 	nfconst.InitialConst()
@@ -23,7 +39,7 @@ func main() {
 	tcpListener, err := net.ListenTCP("tcp", tcpAddr)
 	check_error(err)
 	jlog.Info("JFC Server listening on port ", nfconst.JCfg.JFCPort)
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 500; i++ {
 		go handle_tcp_accept(tcpListener)
 	}
 	select {}
@@ -44,14 +60,24 @@ func handle_tcp_accept(tcpListener *net.TCPListener) {
 				go business_handler(inDataChan, outDataChan)
 				go write_tcp_conn(tcpConn, outDataChan)
 			*/
-			p := pprof.Lookup("goroutine")
-			jlog.Infof("\n\n==================== one tcp connected >> %s, goroutine count = %d", clientConn.RemoteAddr().String(), p.Count())
+			//p := pprof.Lookup("goroutine")
+			jlog.Infof("********* ==================== one tcp connected >> %s", clientConn.RemoteAddr().String())
+			//jlog.Tracef("++++++++++ C_%s, goroutine count = %d", clientConn.RemoteAddr().String(), p.Count())
 		}
 	}
 }
 
 // 每个连接在此函数中完成所有事情，不再启动多个协程
 func handle_logic(clientConn *net.TCPConn) {
+	defer func() { // 必须要先声明defer，否则不能捕获到panic异常
+		if err := recover(); err != nil {
+			jlog.Critical("!!!!!!!!!!!!! LOGIC FANIC error: ", err)
+			//fmt.Println("!!!!!!!!!!!!! LOGIC FANIC error: ", err)
+			clientConn.Close()
+			runtime.Goexit()
+		}
+	}()
+
 	tcpBuffer := make([]byte, nfconst.LEN_TCP_BUFFER)
 	clientConn.SetReadBuffer(nfconst.LEN_TCP_BUFFER)
 	var handle *nfnet.OrgStreamHandler = nfnet.NewOrgStreamHandler()
@@ -64,10 +90,16 @@ func handle_logic(clientConn *net.TCPConn) {
 				// 跳出循环， 并处理已经接收到的数据
 				jlog.Infof("%s close, tcp read end, break read loop", clientConn.RemoteAddr().String())
 			} else {
-				jlog.Error("tcp read error, ", err.Error(), ", break read loop")
+				jlog.Errorf("%s tcp read error %s, break read loop", clientConn.RemoteAddr().String(), err.Error())
 			}
+
+			//jlog.Tracef("---------- D_%s, read err: %s", clientConn.RemoteAddr().String(), err.Error())
+			clientConn.Close()
+			jlog.Infof("==================== goroutine exit\n")
+			runtime.Goexit()
 			break
 		}
+
 		done, buf, err1 := handle.AddStream(tcpBuffer[0:n])
 		msg = buf
 		if err1 != nil {
@@ -81,14 +113,13 @@ func handle_logic(clientConn *net.TCPConn) {
 
 	// 如果执行到了这里， 那么就是 read的时候发生错误到了此处
 	// 一个完整的包具备的最小长度为 头2字节，cmd 1字节， 负载长度2字节，校验1字节，尾2字节 = 8字节
-	n_msg := len(msg)
-	if n_msg >= nfconst.LEN_MIN_PACKAGE && msg[0] == nfconst.SOCK_PACK_HEADER_L && msg[1] == nfconst.SOCK_PACK_HEADER_H &&
-		msg[n_msg-2] == nfconst.SOCK_PACK_ENDER_L && msg[n_msg-1] == nfconst.SOCK_PACK_ENDER_H {
-		msgHandler(clientConn, msg)
-	}
-	clientConn.Close()
-	jlog.Infof("==================== goroutine exit\n")
-	runtime.Goexit()
+	/*
+		n_msg := len(msg)
+		if n_msg >= nfconst.LEN_MIN_PACKAGE && msg[0] == nfconst.SOCK_PACK_HEADER_L && msg[1] == nfconst.SOCK_PACK_HEADER_H &&
+			msg[n_msg-2] == nfconst.SOCK_PACK_ENDER_L && msg[n_msg-1] == nfconst.SOCK_PACK_ENDER_H {
+			msgHandler(clientConn, msg)
+		}
+	*/
 }
 
 func msgHandler(clientConn *net.TCPConn, msg []byte) {

@@ -2,6 +2,7 @@ package nfutil
 
 import (
 	"bytes"
+	"fmt"
 
 	"golang.org/x/net/context"
 	"qiniupkg.com/api.v7/kodo"
@@ -126,4 +127,33 @@ func DellCloudFileByPathPrefix(prefix string) error {
 	ctx := context.Background()
 	_, err := bucket.BatchDelete(ctx, keys...)
 	return err
+}
+
+func DellCloudFileByPathPrefixPartily(prefix string, partCount int) (err error) {
+	if client == nil {
+		getClient()
+	}
+	ctx := context.Background()
+
+	keys := make([]string, partCount, partCount)
+
+	for {
+		entries, _, _ := bucket.List(ctx, prefix, "", partCount)
+		if len(entries) > 0 {
+			for i, v := range entries {
+				keys[i] = v.Key
+			}
+			_, err1 := bucket.BatchDelete(ctx, keys[0:len(entries)]...)
+			if err1 != nil {
+				fmt.Println(err1)
+				continue
+			} else {
+				fmt.Println("delete -- ", len(entries), ", first key: ", keys[0], ", last key: ", keys[len(entries)-1])
+			}
+		} else {
+			fmt.Println("len(entries) <= 0, break")
+			break
+		}
+	}
+	return nil
 }

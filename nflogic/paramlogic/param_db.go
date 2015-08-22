@@ -34,5 +34,6 @@ func queryAngleParamByDeviceSerial(serial string) (params []angleParamDb, err er
 		err = rows.Scan(&ss.Id, &ss.DeviceSerial, &ss.RefMapBlockId, &ss.Bid, &ss.Bangle, &ss.Nid, &ss.Nangle, &ss.CropX, &ss.CropY, &ss.CropW, &ss.CropH, &ss.Remark)
 		params = append(params, ss)
 	}
+	defer rows.Close()
 	return params, nil
 }

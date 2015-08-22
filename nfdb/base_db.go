@@ -2,8 +2,8 @@ package nfdb
 
 import (
 	"database/sql"
+	"jfcsrv/nfconst"
 	"jfcsrv/nflog"
-	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -18,8 +18,9 @@ func GetConn() (db *sql.DB, err error) {
 	if _db != nil {
 		err := _db.Ping()
 		if err != nil {
-			jlog.Error("_db ping failed")
+			jlog.Error("_db ping failed", err)
 			_db.Close()
+			_db = nil
 			open()
 		}
 		return _db, nil
@@ -30,12 +31,13 @@ func GetConn() (db *sql.DB, err error) {
 }
 
 func open() {
-	__db, err1 := sql.Open("postgres", "user=pguser1 password=pguser1 host=dev1.papakaka.com port=5431 dbname=j2map sslmode=disable")
-	__db.SetMaxIdleConns(10)
+	__db, err1 := sql.Open("postgres", nfconst.JCfg.DbConnString)
+	__db.SetMaxIdleConns(5)
 	__db.SetMaxOpenConns(50)
 	if err1 != nil {
 		jlog.Critical("db open failed:", err1)
-		os.Exit(1)
+		__db.Close()
+		__db = nil
 	} else {
 		_db = __db
 	}

@@ -32,7 +32,7 @@ func (h *OrgStreamHandler) AddStream(src []byte) (done bool, buf []byte, err err
 	if n_cur >= nfconst.LEN_MIN_PACKAGE {
 		// 已经是一个完整的包, 不需要再处理了
 		if src[0] == nfconst.SOCK_PACK_HEADER_L && src[1] == nfconst.SOCK_PACK_HEADER_H && src[n_cur-2] == nfconst.SOCK_PACK_ENDER_L && src[n_cur-1] == nfconst.SOCK_PACK_ENDER_H {
-			jlog.Trace("a complete package recieved, n =", len(src))
+			jlog.Debug("a complete package recieved, n =", len(src))
 			return true, src, nil
 		}
 	}
@@ -61,25 +61,25 @@ func (h *OrgStreamHandler) AddStream(src []byte) (done bool, buf []byte, err err
 		// 接受该包剩余的接受长度
 		h.n_data_remain = h.n_pack_data
 
-		jlog.Trace("a new package, n_payload=", n_pay_load, ", n_pack_data=", h.n_pack_data, ", n_data_ramain=", h.n_data_remain)
+		jlog.Debug("a new package, n_payload=", n_pay_load, ", n_pack_data=", h.n_pack_data, ", n_data_ramain=", h.n_data_remain)
 		copy(h.buffer[0:], src[0:n_cur])
 		h.n_data_copyed = h.n_data_copyed + n_cur
 		h.n_data_remain = h.n_data_remain - n_cur
-		jlog.Trace(n_cur, "bytes copyed to package buffer, total ", h.n_data_copyed, ", bytes copyed,", h.n_data_remain, " bytes remained")
+		jlog.Debug(n_cur, "bytes copyed to package buffer, total ", h.n_data_copyed, ", bytes copyed,", h.n_data_remain, " bytes remained")
 
 	} else { // 不是一个新包
 		if n_cur <= h.n_data_remain {
 			copy(h.buffer[h.n_data_copyed:], src[0:n_cur])
 			h.n_data_copyed = h.n_data_copyed + n_cur
 			h.n_data_remain = h.n_data_remain - n_cur
-			jlog.Trace("a remained package, ", n_cur, " recieved this time, ", h.n_data_copyed, " bytes copyed, ", h.n_data_remain, " bytes remained")
+			jlog.Debug("a remained package, ", n_cur, " recieved this time, ", h.n_data_copyed, " bytes copyed, ", h.n_data_remain, " bytes remained")
 		} else {
 			// 如果是这种情况, 说明上一个包后面紧跟着下一个包, 此种情况完全有可能,需要处理
 		}
 	}
 
 	if h.n_data_remain == 0 {
-		jlog.Trace("n_data_remain = 0, data copyed ", h.n_data_copyed)
+		jlog.Debug("n_data_remain = 0, data copyed ", h.n_data_copyed)
 		_n_pack_data := h.n_pack_data
 		h.n_pack_data = 0
 		h.n_data_copyed = 0
