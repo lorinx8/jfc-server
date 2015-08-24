@@ -34,7 +34,7 @@ func OnMsessage(msg []byte) (ret []byte, err error) {
 	switch pkg.Cmd {
 	case nfconst.CMD_REQUEST_PARAM:
 		handler = &paramlogic.ParamLogic{}
-	case nfconst.CMD_REQUEST_ONE_ANGLE_RESULT:
+	case nfconst.CMD_REPORT_ONE_ANGLE_RESULT:
 		handler = &platelogic.PlateResultLogic{}
 	default:
 		jlog.Error("no command handler")

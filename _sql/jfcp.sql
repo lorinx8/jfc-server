@@ -113,7 +113,6 @@ BEGIN
 	SELECT ref_floor_id INTO STRICT _floor_id FROM tbl_jfc_device WHERE device_serial = in_serial;
 	SELECT block_name INTO _block_name FROM tbl_map_realworld_element WHERE ref_floor_id = _floor_id and map_block_id = _map_block_id;
 
-
 	SELECT COUNT(1) INTO _exit_count FROM tbl_jfcp_plate_result WHERE ref_floor_id = _floor_id  and ref_map_block_id = _map_block_id;
 	IF _exit_count = 0 THEN
 		INSERT INTO tbl_jfcp_plate_result (ref_floor_id, ref_map_block_id, car_status, plate_provice_code, plate_provice_char, plate_city_code, plate_number, plate_literal, img_plate) 
@@ -131,6 +130,41 @@ BEGIN
 		WHEN TOO_MANY_ROWS THEN
 			RAISE EXCEPTION 'DEVICE ANGEL NOT UNIQUE';
 
+END
+
+$$ LANGUAGE plpgsql;
+
+
+-- function
+-- function
+CREATE OR REPLACE FUNCTION nf_update_plate_crop(in_serial varchar(12), in_bid integer, in_nid integer,
+			in_img_car_crop_unique varchar(128), in_img_car_crop_history varchar(128))
+RETURNS void AS $$
+DECLARE
+	_map_block_id varchar;
+	_floor_id integer;
+	_result_history_id integer;
+
+BEGIN
+	-- find some info out
+	SELECT ref_map_block_id INTO STRICT _map_block_id FROM tbl_jfcp_angle_param WHERE device_serial = in_serial and bid = in_bid and nid = in_nid;
+	SELECT ref_floor_id INTO STRICT _floor_id FROM tbl_jfc_device WHERE device_serial = in_serial;
+	
+	-- update the result table
+	UPDATE tbl_jfcp_plate_result
+	SET img_crop = in_img_car_crop_unique
+	WHERE ref_floor_id = _floor_id AND ref_map_block_id = _map_block_id;
+	
+	-- update the history result
+	SELECT id INTO _result_history_id 
+	FROM tbl_jfcp_plate_result_history 
+	WHERE ref_device_serial = in_serial and ref_bid = in_bid and ref_nid = in_nid 
+	ORDER BY id DESC 
+	LIMIT 1;
+
+	UPDATE tbl_jfcp_plate_result_history
+	SET img_crop = in_img_car_crop_history
+	WHERE id = _result_history_id;
 END
 
 $$ LANGUAGE plpgsql;
