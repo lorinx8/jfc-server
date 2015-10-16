@@ -6,6 +6,7 @@ import (
 
 const (
 	CONFIG_FILENAME string = "etc/j2.config"
+	// CONFIG_FILENAME string = "E:\\wkcode\\go\\src\\jfcsrv\\nfconst\\etc\\j2.config"
 
 	// sock command and socket related
 	CMD_REQUEST_PARAM          byte = 10

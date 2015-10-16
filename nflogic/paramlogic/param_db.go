@@ -7,9 +7,9 @@ type angleParamDb struct {
 	DeviceSerial  string
 	RefMapBlockId string
 	Bid           int
-	Bangle        int
+	Bangle        float32
 	Nid           int
-	Nangle        int
+	Nangle        float32
 	CropX         int
 	CropY         int
 	CropW         int

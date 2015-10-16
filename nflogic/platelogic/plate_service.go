@@ -355,15 +355,15 @@ func (logic *PlateResultLogic) parseOrgPlateString(orgString string) (pinfo Plat
 }
 
 // 生成车牌文件云端存储的key，包含日期序列，每个角度包含日期序列
-// picp/{年-月-日}/{设备号}/{bid}-{nid}_{时分秒}.jpg
+// picp_history/{年-月-日}/{设备号}/{bid}-{nid}_{时分秒}.jpg
 func (logic *PlateResultLogic) generateCloudPlateImageKeyHistory(serial string, bid int, nid int) (key string) {
 	y, mon, d, h, min, s := nfutil.GetNow()
-	key = fmt.Sprintf("picp_history/%04d-%02d-%02d/%s/%02d-%02d_%02d-%02d-%02d%s", y, mon, d, serial, bid, nid, h, min, s, nfconst.FILENAME_IMG_EXTENT)
+	key = fmt.Sprintf("picp_history/%04d-%02d-%02d/%s/%d-%d_%02d-%02d-%02d%s", y, mon, d, serial, bid, nid, h, min, s, nfconst.FILENAME_IMG_EXTENT)
 	return
 }
 
 // 生成车牌文件云端存储的key, 不包含日期序列，每个角度唯一一个
 func (logic *PlateResultLogic) generateCloudPlateImageKeyUnique(serial string, bid int, nid int) (key string) {
-	key = fmt.Sprintf("picp_u/%s/%02d-%02d%s", serial, bid, nid, nfconst.FILENAME_IMG_EXTENT)
+	key = fmt.Sprintf("picp_u/%s/%d-%d%s", serial, bid, nid, nfconst.FILENAME_IMG_EXTENT)
 	return
 }

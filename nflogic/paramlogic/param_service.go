@@ -15,17 +15,17 @@ type paramRequestPackage struct {
 }
 
 type neckAngle struct {
-	nid    byte   // 角度编号
-	angle  byte   // 角度
-	crop_x uint16 // 剪裁区域参数x
-	crop_y uint16 // 剪裁局域参数y
-	crop_w uint16 // 剪裁区域参数w
-	crop_h uint16 // 剪裁区域参数h
+	nid    byte    // 角度编号
+	angle  float32 // 角度
+	crop_x uint16  // 剪裁区域参数x
+	crop_y uint16  // 剪裁局域参数y
+	crop_w uint16  // 剪裁区域参数w
+	crop_h uint16  // 剪裁区域参数h
 }
 
 type baseAngle struct {
 	bid   byte
-	angle byte
+	angle float32
 	necks []neckAngle
 }
 
@@ -46,14 +46,14 @@ func (logic *ParamLogic) OnLogicMessage(msg []byte) (cmd byte, ret []byte, err e
 
 	switch t.ParamType {
 	case nfconst.CMD_PARAM_TYPE_ANGLE:
-		ret, err = handleAngleParamQuest(s, nfconst.CMD_PARAM_TYPE_ANGLE)
+		ret, err = handleAngleParamRequest(s, nfconst.CMD_PARAM_TYPE_ANGLE)
 	}
 
 	cmd = nfconst.CMD_REQUEST_PARAM_RESPONSE
 	return
 }
 
-func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
+func handleAngleParamRequest(serial string, ptype byte) (ret []byte, err error) {
 
 	retDb, err := queryAngleParamByDeviceSerial(serial)
 	if err != nil {
@@ -67,7 +67,7 @@ func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
 		var _nangle neckAngle
 		_nangle = neckAngle{}
 		_nangle.nid = byte(v.Nid)
-		_nangle.angle = byte(v.Nangle)
+		_nangle.angle = float32(v.Nangle)
 		_nangle.crop_x = uint16(v.CropX)
 		_nangle.crop_y = uint16(v.CropY)
 		_nangle.crop_w = uint16(v.CropW)
@@ -81,7 +81,7 @@ func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
 		} else {
 			var __bangle *baseAngle = &baseAngle{
 				bid:   byte(v.Bid),
-				angle: byte(v.Bangle),
+				angle: float32(v.Bangle),
 				necks: make([]neckAngle, 0),
 			}
 			__bangle.necks = append(__bangle.necks, _nangle)
@@ -107,7 +107,7 @@ func handleAngleParamQuest(serial string, ptype byte) (ret []byte, err error) {
 		_ncount := len(_bst.necks) // 角度1个数
 
 		binary.Write(buf, binary.BigEndian, byte(_bid))
-		binary.Write(buf, binary.BigEndian, byte(_bangle))
+		binary.Write(buf, binary.BigEndian, float32(_bangle))
 		binary.Write(buf, binary.BigEndian, byte(_ncount))
 
 		for _, vv := range _bst.necks {

@@ -22,6 +22,17 @@ func PrintHexArray(arr []byte) {
 	jlog.Debug(writer.String())
 }
 
+func PrintHexArrayToStdout(arr []byte) {
+	writer := new(bytes.Buffer)
+	writer.WriteString("[ ")
+	for _, v := range arr {
+		str := fmt.Sprintf("%02X ", v)
+		writer.WriteString(str)
+	}
+	writer.WriteString(" ]")
+	fmt.Println(writer.String())
+}
+
 func WriteLocalFile(filename string, data []byte) (n int, err error) {
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {

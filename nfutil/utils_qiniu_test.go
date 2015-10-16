@@ -35,7 +35,6 @@ func TestDellCloudFileByPathPrefix(t *testing.T) {
 }
 
 func TestDellCloudFileByPathPrefixPartily(t *testing.T) {
-
-	DellCloudFileByPathPrefixPartily("picp", 1000)
+	go DellCloudFileByPathPrefixPartily("picp", 1000)
 
 }

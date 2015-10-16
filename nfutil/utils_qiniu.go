@@ -148,10 +148,10 @@ func DellCloudFileByPathPrefixPartily(prefix string, partCount int) (err error) 
 				fmt.Println(err1)
 				continue
 			} else {
-				fmt.Println("delete -- ", len(entries), ", first key: ", keys[0], ", last key: ", keys[len(entries)-1])
+				fmt.Println(prefix, "delete -- ", len(entries), ", first key: ", keys[0], ", last key: ", keys[len(entries)-1])
 			}
 		} else {
-			fmt.Println("len(entries) <= 0, break")
+			fmt.Println(prefix, "len(entries) <= 0, break")
 			break
 		}
 	}
